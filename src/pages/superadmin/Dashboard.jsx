@@ -66,8 +66,8 @@ const Dashboard = () => {
       }
 
       const res = await axios.get(
-        // "https://reality-crm-wmos.onrender.com/api/users/stats",
-        "https://reality-crm-wmos.onrender.com/api/users/stats",
+        // "https://oneplussparkpaintsserver.onrender.com/api/users/stats",
+        "https://oneplussparkpaintsserver.onrender.com/api/users/stats",
         {
           headers: {
             Authorization: `Bearer ${token}`,

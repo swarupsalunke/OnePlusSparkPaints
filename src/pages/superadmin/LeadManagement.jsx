@@ -90,7 +90,7 @@ const LeadManagement = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem("token");
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/leads", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/leads", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLeads(response.data.leads || []);
@@ -106,7 +106,7 @@ const LeadManagement = () => {
     const fetchUsers = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/users", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/users", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const userData = response.data.users || response.data.data || [];
@@ -324,7 +324,7 @@ const LeadManagement = () => {
 
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`https://reality-crm-wmos.onrender.com/api/leads/${id}`, {
+            await axios.delete(`https://oneplussparkpaintsserver.onrender.com/api/leads/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             alert("Lead deleted successfully");
@@ -379,13 +379,13 @@ const LeadManagement = () => {
 
             if (editingLead) {
                 await axios.put(
-                    `https://reality-crm-wmos.onrender.com/api/leads/${editingLead._id}`,
+                    `https://oneplussparkpaintsserver.onrender.com/api/leads/${editingLead._id}`,
                     formData,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 alert("Lead updated successfully");
             } else {
-                await axios.post("https://reality-crm-wmos.onrender.com/api/leads", formData, {
+                await axios.post("https://oneplussparkpaintsserver.onrender.com/api/leads", formData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 alert("Lead created successfully");

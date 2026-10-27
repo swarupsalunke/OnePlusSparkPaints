@@ -26,7 +26,7 @@ import {
 import "../../css/superadmin/ApprovalWorkflow.css";
 
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/approvals";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/approvals";
 
 const MODULE_TYPES = [
     "Reward Point Release",

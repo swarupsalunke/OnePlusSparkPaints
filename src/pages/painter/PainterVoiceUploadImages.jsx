@@ -109,7 +109,7 @@ const PainterVoiceUploadImages = () => {
             });
 
             const response = await fetch(
-                "https://reality-crm-wmos.onrender.com/api/painter/voice-images",
+                "https://oneplussparkpaintsserver.onrender.com/api/painter/voice-images",
                 {
                     method: "POST",
                     headers: {

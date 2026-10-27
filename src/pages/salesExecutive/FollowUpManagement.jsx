@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 import "../../css/salesExecutive/FollowUpManagement.css";
-const API_URL = `${import.meta.env.VITE_API_BASE_URL || "https://reality-crm-wmos.onrender.com"}/api/sales-executive/follow-ups`;
+const API_URL = `${import.meta.env.VITE_API_BASE_URL || "https://oneplussparkpaintsserver.onrender.com"}/api/sales-executive/follow-ups`;
 
 const initialForm = {
     customerType: "Dealer",

@@ -29,7 +29,7 @@ import {
 
 import "../../css/superadmin/financeDashboard.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/finance";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/finance";
 
 const FinanceDashboard = () => {
 
@@ -166,7 +166,7 @@ const FinanceDashboard = () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await axios.get("https://reality-crm-wmos.onrender.com/api/users", {
+      const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../../css/painter/PainterShopProductListing.css";
 
-const PRODUCT_API = "https://reality-crm-wmos.onrender.com/api/painter/products";
-const SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const PRODUCT_API = "https://oneplussparkpaintsserver.onrender.com/api/painter/products";
+const SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterShopProductListing = () => {
     const navigate = useNavigate();

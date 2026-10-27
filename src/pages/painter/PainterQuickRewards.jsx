@@ -3,7 +3,7 @@ import { Gift, IndianRupee, Clock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import "../../css/painter/PainterQuickRewards.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com/api";
 
 const PainterQuickRewards = () => {
   const [summary, setSummary] = useState({

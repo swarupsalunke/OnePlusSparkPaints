@@ -182,7 +182,7 @@ const AddUser = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `https://reality-crm-wmos.onrender.com/api/users/${id}`,
+        `https://oneplussparkpaintsserver.onrender.com/api/users/${id}`,
         {
           method: "GET",
           headers: {
@@ -272,7 +272,7 @@ const AddUser = () => {
         setProfilePreview(
           user.profilePicture.startsWith("http")
             ? user.profilePicture
-            : `https://reality-crm-wmos.onrender.com${user.profilePicture}`
+            : `https://oneplussparkpaintsserver.onrender.com${user.profilePicture}`
         );
       }
 
@@ -374,7 +374,7 @@ const AddUser = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "https://reality-crm-wmos.onrender.com/api/users",
+        "https://oneplussparkpaintsserver.onrender.com/api/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -634,8 +634,8 @@ const AddUser = () => {
       // ==========================================
 
       const url = isEditMode
-        ? `https://reality-crm-wmos.onrender.com/api/users/${id}`
-        : "https://reality-crm-wmos.onrender.com/api/users";
+        ? `https://oneplussparkpaintsserver.onrender.com/api/users/${id}`
+        : "https://oneplussparkpaintsserver.onrender.com/api/users";
 
       const method = isEditMode
         ? "PUT"

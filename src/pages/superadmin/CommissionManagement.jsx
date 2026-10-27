@@ -29,7 +29,7 @@ import {
 
 import "../../css/superadmin/CommissionManagement.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/commissions";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/commissions";
 
 const STATUS_OPTIONS = [
     "PENDING_CALCULATION",

@@ -40,7 +40,7 @@ const PainterShopSubmitEnquiry = () => {
                 const token = localStorage.getItem("token");
 
                 const response = await axios.get(
-                    "https://reality-crm-wmos.onrender.com/api/painter/dealers",
+                    "https://oneplussparkpaintsserver.onrender.com/api/painter/dealers",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -91,7 +91,7 @@ const PainterShopSubmitEnquiry = () => {
             }));
 
             const response = await axios.post(
-                "https://reality-crm-wmos.onrender.com/api/painter/shop-enquiries",
+                "https://oneplussparkpaintsserver.onrender.com/api/painter/shop-enquiries",
                 {
                     products,
                     preferredDealer: dealer,

@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import "../../css/painter/PainterLoyaltyDashboard.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterLoyaltyDashboard = () => {
   const navigate = useNavigate();

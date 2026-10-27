@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "../../css/painter/PainterShopProductDetails.css";
 
-const PRODUCT_API = "https://reality-crm-wmos.onrender.com/api/painter/products";
+const PRODUCT_API = "https://oneplussparkpaintsserver.onrender.com/api/painter/products";
 
 const PainterShopProductDetails = () => {
     const { id } = useParams();
@@ -178,7 +178,7 @@ const PainterShopProductDetails = () => {
                 <div className="painter-shop-product-details-image">
                     {product.image ? (
                         <img
-                            src={`https://reality-crm-wmos.onrender.com${product.image}`}
+                            src={`https://oneplussparkpaintsserver.onrender.com${product.image}`}
                             alt={product.productName || "Product"}
                         />
                     ) : (

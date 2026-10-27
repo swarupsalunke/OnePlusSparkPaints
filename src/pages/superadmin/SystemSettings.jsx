@@ -17,7 +17,7 @@ import {
 
 import "../../css/superadmin/generalSettings.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/system-settings";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/system-settings";
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({

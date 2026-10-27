@@ -94,7 +94,7 @@ const OrderManagement = () => {
             setLoading(true);
             const token = localStorage.getItem("token");
 
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/orders", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/orders", {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -114,7 +114,7 @@ const OrderManagement = () => {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/users", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/users", {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -148,7 +148,7 @@ const OrderManagement = () => {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/products", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/products", {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -255,7 +255,7 @@ const OrderManagement = () => {
         try {
             const token = localStorage.getItem("token");
 
-            await axios.delete(`https://reality-crm-wmos.onrender.com/api/orders/${id}`, {
+            await axios.delete(`https://oneplussparkpaintsserver.onrender.com/api/orders/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -334,7 +334,7 @@ const OrderManagement = () => {
                 paymentStatus: orderForm.paymentStatus,
             };
 
-            await axios.post("https://reality-crm-wmos.onrender.com/api/orders", payload, {
+            await axios.post("https://oneplussparkpaintsserver.onrender.com/api/orders", payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -432,7 +432,7 @@ const OrderManagement = () => {
                 paymentStatus: editOrderForm.paymentStatus,
             };
 
-            await axios.put(`https://reality-crm-wmos.onrender.com/api/orders/${editOrderId}`, payload, {
+            await axios.put(`https://oneplussparkpaintsserver.onrender.com/api/orders/${editOrderId}`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

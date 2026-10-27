@@ -66,7 +66,7 @@ const DailyCashReport = () => {
         try {
             setSummaryLoading(true);
             const token = localStorage.getItem("token");
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/daily-cash-reports", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/daily-cash-reports", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const reports = response.data?.reports || [];
@@ -87,7 +87,7 @@ const DailyCashReport = () => {
         try {
             setRecentReportsLoading(true);
             const token = localStorage.getItem("token");
-            const response = await axios.get("https://reality-crm-wmos.onrender.com/api/daily-cash-reports", {
+            const response = await axios.get("https://oneplussparkpaintsserver.onrender.com/api/daily-cash-reports", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const reports = response.data?.reports || [];
@@ -313,7 +313,7 @@ const DailyCashReport = () => {
             };
 
             const token = localStorage.getItem("token");
-            const response = await axios.post("https://reality-crm-wmos.onrender.com/api/daily-cash-reports", payload, {
+            const response = await axios.post("https://oneplussparkpaintsserver.onrender.com/api/daily-cash-reports", payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

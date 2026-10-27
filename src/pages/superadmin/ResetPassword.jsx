@@ -70,7 +70,7 @@ const ResetPassword = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "https://reality-crm-wmos.onrender.com/api/auth/forgot-password/reset",
+        "https://oneplussparkpaintsserver.onrender.com/api/auth/forgot-password/reset",
         {
           resetToken,
           newPassword: formData.newPassword,

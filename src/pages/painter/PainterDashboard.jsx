@@ -26,7 +26,7 @@ const PainterDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   const API_URL =
-    import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+    import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
   useEffect(() => {
     fetchDashboard();

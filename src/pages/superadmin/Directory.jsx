@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/Directory.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/contacts";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/contacts";
 
 const Directory = () => {
   const [contacts, setContacts] = useState([]);

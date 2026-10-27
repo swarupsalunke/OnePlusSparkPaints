@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "../css/salesExecutive/SalesExecutiveNavbar.css";
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "https://reality-crm-wmos.onrender.com"
+  import.meta.env.VITE_API_BASE_URL || "https://oneplussparkpaintsserver.onrender.com"
 ).replace(/\/+$/, "");
 
 const SalesExecutiveNavbar = ({ onMenuClick }) => {

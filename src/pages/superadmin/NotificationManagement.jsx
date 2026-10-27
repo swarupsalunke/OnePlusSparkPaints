@@ -31,7 +31,7 @@ import {
 
 import "../../css/superadmin/notificationmanagement.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api";
 
 const emptyNotification = {
     title: "",

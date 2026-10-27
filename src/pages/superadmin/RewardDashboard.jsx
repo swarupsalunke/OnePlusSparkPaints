@@ -25,7 +25,7 @@ import {
 
 import "../../css/superadmin/rewardDashboard.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const RewardDashboard = () => {
     const [loading, setLoading] = useState(false);

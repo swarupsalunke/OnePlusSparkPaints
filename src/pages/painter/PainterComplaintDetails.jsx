@@ -6,7 +6,7 @@ import "../../css/painter/PainterComplaintDetails.css";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://reality-crm-wmos.onrender.com";
+  "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterComplaintDetails = () => {
   const location = useLocation();

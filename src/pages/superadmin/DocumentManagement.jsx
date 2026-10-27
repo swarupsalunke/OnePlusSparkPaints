@@ -35,7 +35,7 @@ import {
 import "../../css/superadmin/DocumentManagement.css";
 
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/documents";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/documents";
 
 const CATEGORY_OPTIONS = [
     {

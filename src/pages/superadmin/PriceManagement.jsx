@@ -3,7 +3,7 @@ import axios from "axios";
 import { Upload, Download, Filter, Search, Pencil, Eye, Trash2, X, ChevronRight, ChevronLeft, } from "lucide-react";
 import "../../css/superadmin/pricemanagement.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api";
 
 const PriceManagement = () => {
 

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/BankPaymentSheet.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/bank-payments";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/bank-payments";
 
 const BankPaymentSheet = () => {
     const [payments, setPayments] = useState([]);

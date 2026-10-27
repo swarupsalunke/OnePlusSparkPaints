@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import "../../css/painter/PainterSchemeDetails.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterSchemeDetails = () => {
   const navigate = useNavigate();

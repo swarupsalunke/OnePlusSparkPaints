@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/SocialMediaActivities.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/social-media";
-const SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/social-media";
+const SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const platforms = [
     "Facebook",

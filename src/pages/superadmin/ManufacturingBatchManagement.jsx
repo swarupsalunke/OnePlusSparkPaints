@@ -25,7 +25,7 @@ import {
 
 import "../../css/superadmin/ManufacturingManagement.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api/manufacturing";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api/manufacturing";
 
 const ManufacturingBatchManagement = () => {
 
@@ -219,7 +219,7 @@ const ManufacturingBatchManagement = () => {
     const fetchProducts = async () => {
         try {
             const response = await axios.get(
-                "https://reality-crm-wmos.onrender.com/api/products",
+                "https://oneplussparkpaintsserver.onrender.com/api/products",
                 authConfig()
             );
 
@@ -243,7 +243,7 @@ const ManufacturingBatchManagement = () => {
     const fetchUsers = async () => {
         try {
             const response = await axios.get(
-                "https://reality-crm-wmos.onrender.com/api/users",
+                "https://oneplussparkpaintsserver.onrender.com/api/users",
                 authConfig()
             );
 

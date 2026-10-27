@@ -100,7 +100,7 @@ const OTPVerification = () => {
       setError("");
 
       const response = await axios.post(
-        "https://reality-crm-wmos.onrender.com/api/auth/forgot-password/verify-otp",
+        "https://oneplussparkpaintsserver.onrender.com/api/auth/forgot-password/verify-otp",
         {
           identifier,
           otp: otpValue,
@@ -135,7 +135,7 @@ const OTPVerification = () => {
       setError("");
 
       await axios.post(
-        "https://reality-crm-wmos.onrender.com/api/auth/forgot-password/send-otp",
+        "https://oneplussparkpaintsserver.onrender.com/api/auth/forgot-password/send-otp",
         {
           identifier,
         }

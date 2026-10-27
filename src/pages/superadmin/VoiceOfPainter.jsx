@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/voiceOfPainter.css";
 
-const API_BASE = "https://reality-crm-wmos.onrender.com/api/feedback";
+const API_BASE = "https://oneplussparkpaintsserver.onrender.com/api/feedback";
 
 const emptyForm = {
     title: "",

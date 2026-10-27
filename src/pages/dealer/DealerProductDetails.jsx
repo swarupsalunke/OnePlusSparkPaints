@@ -11,7 +11,7 @@ import {
 import "../../css/dealer/DealerProductDetails.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-const SERVER_URL = API_BASE_URL || "https://reality-crm-wmos.onrender.com";
+const SERVER_URL = API_BASE_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const DealerProductDetails = () => {
     const { id } = useParams();

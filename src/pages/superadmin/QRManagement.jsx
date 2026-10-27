@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/QRCodeManagement.css";
 
-const API_BASE = "https://reality-crm-wmos.onrender.com/api";
+const API_BASE = "https://oneplussparkpaintsserver.onrender.com/api";
 
 const QR_STATUS = [
   "Unused",

@@ -29,8 +29,8 @@ import {
 
 import "../../css/superadmin/schemeManagement.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/schemes";
-const SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/schemes";
+const SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const getFileUrl = (filePath) => {
   if (!filePath) return "";

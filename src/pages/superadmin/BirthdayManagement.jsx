@@ -22,7 +22,7 @@ import {
 import axios from "axios";
 import "../../css/superadmin/BirthdayManagement.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api";
 
 const BirthdayManagement = () => {
   const [birthdays, setBirthdays] = useState([]);

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/painter/PainterDownloadProductImages.css";
 
-const PRODUCT_API = "https://reality-crm-wmos.onrender.com/api/painter/products";
-const SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const PRODUCT_API = "https://oneplussparkpaintsserver.onrender.com/api/painter/products";
+const SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterDownloadProductImages = () => {
     const [products, setProducts] = useState([]);

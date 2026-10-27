@@ -25,7 +25,7 @@ const ForgotPassword = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "https://reality-crm-wmos.onrender.com/api/auth/forgot-password/send-otp",
+        "https://oneplussparkpaintsserver.onrender.com/api/auth/forgot-password/send-otp",
         {
           identifier: identifier.trim(),
         }

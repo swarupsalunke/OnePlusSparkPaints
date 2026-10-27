@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import "../../css/painter/PainterVoiceDashboard.css";
 
-const API_BASE = "https://reality-crm-wmos.onrender.com";
+const API_BASE = "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterVoiceDashboard = () => {
     const navigate = useNavigate();

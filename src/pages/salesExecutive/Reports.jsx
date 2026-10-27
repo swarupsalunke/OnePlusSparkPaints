@@ -18,7 +18,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import "../../css/salesExecutive/Reports.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const getToken = () =>
     localStorage.getItem("token") ||

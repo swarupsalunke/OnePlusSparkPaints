@@ -27,7 +27,7 @@ import {
 import "../../css/superadmin/loyaltyTierManagement.css";
 
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/loyalty-tiers";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/loyalty-tiers";
 
 const initialForm = {
     tierName: "",

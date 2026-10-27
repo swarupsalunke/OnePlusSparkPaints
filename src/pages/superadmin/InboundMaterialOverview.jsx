@@ -25,7 +25,7 @@ import {
 
 import "../../css/superadmin/inboundMaterialOverview.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api";
 
 const STATUS_OPTIONS = [
     { value: "RECEIVED", label: "Received" },

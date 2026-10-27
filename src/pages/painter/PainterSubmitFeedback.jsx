@@ -114,7 +114,7 @@ const PainterSubmitFeedback = () => {
             });
 
             const response = await fetch(
-                "https://reality-crm-wmos.onrender.com/api/painter/feedback",
+                "https://oneplussparkpaintsserver.onrender.com/api/painter/feedback",
                 {
                     method: "POST",
                     headers: {

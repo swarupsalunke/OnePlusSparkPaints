@@ -3,7 +3,7 @@ import { Eye, Mail, Phone, UserRound } from "lucide-react";
 import "../../css/dealer/DealerPainterEnquiries.css";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+  import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const DealerPainterEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);

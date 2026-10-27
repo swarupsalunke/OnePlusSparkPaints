@@ -3,8 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../../css/painter/PainterDownloadProductListing.css";
 
-const API_URL = "https://reality-crm-wmos.onrender.com/api/painter/products";
-const SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/painter/products";
+const SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const PainterDownloadProductListing = () => {
     const [products, setProducts] = useState([]);

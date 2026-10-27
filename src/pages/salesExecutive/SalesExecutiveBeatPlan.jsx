@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import "../../css/salesExecutive/SalesExecutiveBeatPlan.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const SalesExecutiveBeatPlan = () => {
   const [visits, setVisits] = useState([]);

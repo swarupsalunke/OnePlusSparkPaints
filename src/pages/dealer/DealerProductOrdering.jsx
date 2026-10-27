@@ -5,7 +5,7 @@ import "../../css/dealer/DealerProductOrdering.css";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-const SERVER_URL = API_BASE_URL || "https://reality-crm-wmos.onrender.com";
+const SERVER_URL = API_BASE_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const DealerProductOrdering = () => {
     const [products, setProducts] = useState([]);

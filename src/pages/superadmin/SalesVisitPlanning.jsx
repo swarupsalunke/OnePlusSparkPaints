@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/salesVisitPlanning.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api/sales-visits";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api/sales-visits";
 
 const initialVisitForm = {
   visitType: "DEALER",
@@ -260,7 +260,7 @@ function SalesVisitPlanning() {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        "https://reality-crm-wmos.onrender.com/api/users",
+        "https://oneplussparkpaintsserver.onrender.com/api/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -3,7 +3,7 @@ import { CalendarDays, Download, Eye, FileText, RefreshCw, Tag, ArrowLeft, } fro
 import "../../css/dealer/DealerOffers.css";
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "https://reality-crm-wmos.onrender.com";
+    import.meta.env.VITE_API_URL || "https://oneplussparkpaintsserver.onrender.com";
 
 const SERVER_URL = API_BASE_URL;
 

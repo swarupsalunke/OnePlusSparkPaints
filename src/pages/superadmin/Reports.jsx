@@ -28,8 +28,8 @@ import {
 
 import "../../css/superadmin/reports.css";
 
-const API_BASE_URL = "https://reality-crm-wmos.onrender.com/api/reports";
-const REPORT_SERVER_URL = "https://reality-crm-wmos.onrender.com";
+const API_BASE_URL = "https://oneplussparkpaintsserver.onrender.com/api/reports";
+const REPORT_SERVER_URL = "https://oneplussparkpaintsserver.onrender.com";
 
 const Reports = () => {
 
@@ -587,7 +587,7 @@ const Reports = () => {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`https://reality-crm-wmos.onrender.com/api/reports/${id}`, {
+      const response = await fetch(`https://oneplussparkpaintsserver.onrender.com/api/reports/${id}`, {
         method: "DELETE",
       });
 

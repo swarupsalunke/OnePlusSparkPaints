@@ -12,7 +12,7 @@ const PainterSubmissionHistory = () => {
             const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "https://reality-crm-wmos.onrender.com/api/painter/voice-history",
+                "https://oneplussparkpaintsserver.onrender.com/api/painter/voice-history",
                 {
                     method: "GET",
                     headers: {

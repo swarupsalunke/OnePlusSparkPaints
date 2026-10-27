@@ -73,7 +73,7 @@ const PainterVoiceUploadVideo = () => {
             formData.append("video", video);
 
             const response = await fetch(
-                "https://reality-crm-wmos.onrender.com/api/painter/voice-video",
+                "https://oneplussparkpaintsserver.onrender.com/api/painter/voice-video",
                 {
                     method: "POST",
                     headers: {
