@@ -92,19 +92,19 @@ const Login = () => {
   const roleCredentials = {
     ADMIN: {
       email: "admin@oneplusspark.com",
-      password: "YOUR_ADMIN_PASSWORD",
+      password: "Admin@465",
     },
     PAINTER: {
-      email: "PAINTER_EMAIL",
-      password: "PAINTER_PASSWORD",
+      email: "dinesh@gmail.com",
+      password: "Dinesh1@",
     },
     DEALER: {
-      email: "DEALER_EMAIL",
-      password: "DEALER_PASSWORD",
+      email: "sarvesh@gmail.com",
+      password: "Sarvesh1@",
     },
     SALES_EXECUTIVE: {
-      email: "SALES_EMAIL",
-      password: "SALES_PASSWORD",
+      email: "yogesh@gmail.com",
+      password: "Yogesh1@",
     },
   };
 
