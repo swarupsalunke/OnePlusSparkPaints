@@ -27,7 +27,7 @@ const SalesExecutiveNavbar = ({ onMenuClick }) => {
         if (!token) return;
 
         const response = await fetch(
-          `${API_BASE_URL}/api/sales-executive/profile`,
+          `${API_BASE_URL}/api/sales-executive/profile-management`,
           {
             headers: {
               Accept: "application/json",
