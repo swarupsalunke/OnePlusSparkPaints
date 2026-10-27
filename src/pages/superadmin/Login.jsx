@@ -274,18 +274,18 @@ const Login = () => {
             </div>
 
             {/* Remember Me + Forgot Password */}
-            {/* <div className="login-options">
-              <label className="remember">
+            <div className="login-options">
+              {/* <label className="remember">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <span>Remember Me</span>
-              </label>
+              </label> */}
 
               <Link to="/forgot-password">Forgot Password?</Link>
-            </div> */}
+            </div>
 
             {/* Login Error */}
             {error && (
