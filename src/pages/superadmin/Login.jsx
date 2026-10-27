@@ -89,6 +89,25 @@ const Login = () => {
     }
   };
 
+  const roleCredentials = {
+    ADMIN: {
+      email: "admin@oneplusspark.com",
+      password: "YOUR_ADMIN_PASSWORD",
+    },
+    PAINTER: {
+      email: "PAINTER_EMAIL",
+      password: "PAINTER_PASSWORD",
+    },
+    DEALER: {
+      email: "DEALER_EMAIL",
+      password: "DEALER_PASSWORD",
+    },
+    SALES_EXECUTIVE: {
+      email: "SALES_EMAIL",
+      password: "SALES_PASSWORD",
+    },
+  };
+
   const roles = [
     { value: "ADMIN", label: "Admin", Icon: ShieldCheck },
     { value: "PAINTER", label: "Painter", Icon: Paintbrush },
@@ -301,12 +320,18 @@ const Login = () => {
                 <button
                   key={value}
                   type="button"
-                  className={`role-access-item ${
-                    selectedRole === value ? "selected" : ""
-                  }`}
+                  className={`role-access-item ${selectedRole === value ? "selected" : ""
+                    }`}
                   onClick={() => {
                     setSelectedRole(value);
                     setError("");
+
+                    const credentials = roleCredentials[value];
+
+                    setFormData({
+                      email: credentials.email,
+                      password: credentials.password,
+                    });
                   }}
                   aria-pressed={selectedRole === value}
                 >
