@@ -470,7 +470,7 @@ const Sidebar = () => {
             <span>Notification & Subscription</span>
           </NavLink>
 
-          <NavLink
+          {/* <NavLink
             to="/system-settings"
             className={({ isActive }) =>
               `dashboard-nav-item ${isActive ? "active" : ""}`
@@ -478,7 +478,7 @@ const Sidebar = () => {
           >
             <Settings size={19} />
             <span>System Settings</span>
-          </NavLink>
+          </NavLink> */}
 
         </nav>
 
