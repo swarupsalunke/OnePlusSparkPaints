@@ -31,6 +31,38 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../../css/superadmin/admindashboard.css";
 
+
+
+const DEFAULT_VIEWS = [
+  "statistics",
+  "salesOverview",
+  "orderStatus",
+  "quickActions",
+  "topSellingProducts",
+  "topDealers",
+  "recentActivity",
+  "systemOverview",
+  "kycOverview",
+  "userStatus",
+];
+
+const DASHBOARD_VIEW_OPTIONS = [
+  { key: "statistics", label: "Statistics Cards" },
+  { key: "salesOverview", label: "Sales Overview" },
+  { key: "orderStatus", label: "Order Status" },
+  { key: "quickActions", label: "Quick Actions" },
+  { key: "topSellingProducts", label: "Top Selling Products" },
+  { key: "topDealers", label: "Top Dealers" },
+  { key: "recentActivity", label: "Recent Activity" },
+  { key: "systemOverview", label: "System Overview" },
+  { key: "kycOverview", label: "KYC Overview" },
+  { key: "userStatus", label: "User Status" },
+];
+
+const API_BASE_URL =
+  "https://oneplussparkpaintsserver.onrender.com/api";
+
+
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -49,9 +81,71 @@ const Dashboard = () => {
     systemOverview: [],
   });
 
+
+  const fetchDashboardPreferences = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        `${API_BASE_URL}/dashboard-preferences`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setVisibleViews(res.data.visibleViews);
+        setDraftViews(res.data.visibleViews);
+      }
+    } catch (error) {
+      console.error(
+        "Dashboard preferences error:",
+        error?.response?.data || error
+      );
+    }
+  };
+  const saveDashboardPreferences = async () => {
+    try {
+      setSavingPreferences(true);
+
+      const token = localStorage.getItem("token");
+
+      const res = await axios.put(
+        `${API_BASE_URL}/dashboard-preferences`,
+        {
+          visibleViews: draftViews,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setVisibleViews(res.data.visibleViews);
+        setDraftViews(res.data.visibleViews);
+        setShowCustomizeModal(false);
+      }
+    } catch (error) {
+      console.error(
+        "Save dashboard preferences error:",
+        error?.response?.data || error
+      );
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState("This Week");
+  const [visibleViews, setVisibleViews] = useState(DEFAULT_VIEWS);
+  const [draftViews, setDraftViews] = useState(DEFAULT_VIEWS);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
   const navigate = useNavigate();
 
   const fetchDashboardStats = async (isRefresh = false) => {
@@ -103,6 +197,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
+    fetchDashboardPreferences();
   }, []);
 
   const isNumber = (v) => typeof v === "number" && Number.isFinite(v);
@@ -177,6 +272,16 @@ const Dashboard = () => {
         </div>
 
         <div className="dashboard-actions">
+          <button
+            className="dashboard-customize-btn"
+            type="button"
+            onClick={() => {
+              setDraftViews(visibleViews);
+              setShowCustomizeModal(true);
+            }}
+          >
+            Customize Dashboard
+          </button>
           <button className="dashboard-refresh-btn" onClick={() => fetchDashboardStats(true)} disabled={refreshing}>
             <RefreshCw size={15} className={refreshing ? "refresh-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
@@ -189,364 +294,439 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* STAT CARDS */}
-      <div className="dashboard-stats-grid">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          const value = loading || !card.available ? "—" : card.type === "currency" ? formatCurrency(card.value) : formatNumber(card.value);
+      {visibleViews.includes("statistics") && (
+        <div className="dashboard-stats-grid">
+          {statCards.map((card) => {
+            const Icon = card.icon;
+            const value = loading || !card.available ? "—" : card.type === "currency" ? formatCurrency(card.value) : formatNumber(card.value);
 
-          return (
-            <div className="dashboard-stat-card-new" key={card.title}>
-              <div className="dashboard-stat-top">
-                <div className="dashboard-stat-icon">
-                  <Icon size={21} />
-                </div>
-                <button type="button" className="stat-more-btn" aria-label={`${card.title} options`}>
-                  <MoreHorizontal size={18} />
-                </button>
-              </div>
-
-              <div className="dashboard-stat-value">{value}</div>
-              <div className="dashboard-stat-title">{card.title}</div>
-
-              <div className="dashboard-stat-bottom">
-                <span className="dashboard-stat-subtitle">{card.subtitle}</span>
-                {!loading && !card.available && <span className="stat-no-data">No data</span>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* CHARTS */}
-      <div className="dashboard-chart-grid">
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>Sales Overview</h3>
-              <p>Sales performance for {period.toLowerCase()}</p>
-            </div>
-            {renderPeriodSelect("panel-period-select")}
-          </div>
-
-          <div className="sales-chart-container">
-            {hasSalesData ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats.salesOverview}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf0f4" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#697386" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#697386" }} />
-                  <Tooltip contentStyle={{ border: "1px solid #e8ebf0", borderRadius: "10px", boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)" }} />
-                  <Line type="monotone" dataKey="sales" stroke="#ff7a00" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              renderEmptyState("No sales data found")
-            )}
-          </div>
-        </div>
-
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>Order Status</h3>
-              <p>Current order distribution</p>
-            </div>
-            {renderPeriodSelect("panel-period-select")}
-          </div>
-
-          <div className="order-status-content">
-            {hasOrderData ? (
-              <>
-                <div className="order-donut-wrap">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={stats.orderStatus} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="82%" paddingAngle={2} stroke="none">
-                        {stats.orderStatus.map((entry, index) => (
-                          <Cell key={`${entry.label}-${index}`} fill={entry.color || orderStatusColors[index % orderStatusColors.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-
-                  <div className="donut-center">
-                    <strong>{formatNumber(stats.orderStatus.reduce((sum, item) => sum + (Number(item.value) || 0), 0))}</strong>
-                    <span>Total Orders</span>
-                  </div>
-                </div>
-
-                <div className="order-status-list">
-                  {stats.orderStatus.map((item, index) => (
-                    <div className="order-status-row" key={`${item.label}-${index}`}>
-                      <div>
-                        <span className="order-status-dot" style={{ background: item.color || orderStatusColors[index % orderStatusColors.length] }} />
-                        <span>{item.label}</span>
-                      </div>
-                      <strong>{formatNumber(item.value)}</strong>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              renderEmptyState("No order status data found")
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* QUICK ACTIONS */}
-      <div className="dashboard-panel-new quick-actions-panel">
-        <div className="dashboard-panel-header">
-          <div>
-            <h3>Quick Actions</h3>
-            <p>Frequently used CRM actions</p>
-          </div>
-        </div>
-
-        <div className="quick-actions">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
             return (
-              <button key={action.label} className="quick-action" onClick={() => action.to && navigate(action.to)} disabled={!action.to}>
-                <span className="quick-action-icon">
-                  <Icon size={18} />
-                </span>
-                <span>{action.label}</span>
-              </button>
+              <div className="dashboard-stat-card-new" key={card.title}>
+                <div className="dashboard-stat-top">
+                  <div className="dashboard-stat-icon">
+                    <Icon size={21} />
+                  </div>
+                  <button type="button" className="stat-more-btn" aria-label={`${card.title} options`}>
+                    <MoreHorizontal size={18} />
+                  </button>
+                </div>
+
+                <div className="dashboard-stat-value">{value}</div>
+                <div className="dashboard-stat-title">{card.title}</div>
+
+                <div className="dashboard-stat-bottom">
+                  <span className="dashboard-stat-subtitle">{card.subtitle}</span>
+                  {!loading && !card.available && <span className="stat-no-data">No data</span>}
+                </div>
+              </div>
             );
           })}
         </div>
+      )
+      }
+
+      {/* CHARTS */}
+      <div className="dashboard-chart-grid">
+        {visibleViews.includes("salesOverview") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Sales Overview</h3>
+                <p>Sales performance for {period.toLowerCase()}</p>
+              </div>
+              {renderPeriodSelect("panel-period-select")}
+            </div>
+
+            <div className="sales-chart-container">
+              {hasSalesData ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.salesOverview}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf0f4" />
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#697386" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#697386" }} />
+                    <Tooltip contentStyle={{ border: "1px solid #e8ebf0", borderRadius: "10px", boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)" }} />
+                    <Line type="monotone" dataKey="sales" stroke="#ff7a00" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                renderEmptyState("No sales data found")
+              )}
+            </div>
+          </div>
+        )}
+
+        {visibleViews.includes("orderStatus") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Order Status</h3>
+                <p>Current order distribution</p>
+              </div>
+              {renderPeriodSelect("panel-period-select")}
+            </div>
+
+            <div className="order-status-content">
+              {hasOrderData ? (
+                <>
+                  <div className="order-donut-wrap">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={stats.orderStatus} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="82%" paddingAngle={2} stroke="none">
+                          {stats.orderStatus.map((entry, index) => (
+                            <Cell key={`${entry.label}-${index}`} fill={entry.color || orderStatusColors[index % orderStatusColors.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <div className="donut-center">
+                      <strong>{formatNumber(stats.orderStatus.reduce((sum, item) => sum + (Number(item.value) || 0), 0))}</strong>
+                      <span>Total Orders</span>
+                    </div>
+                  </div>
+
+                  <div className="order-status-list">
+                    {stats.orderStatus.map((item, index) => (
+                      <div className="order-status-row" key={`${item.label}-${index}`}>
+                        <div>
+                          <span className="order-status-dot" style={{ background: item.color || orderStatusColors[index % orderStatusColors.length] }} />
+                          <span>{item.label}</span>
+                        </div>
+                        <strong>{formatNumber(item.value)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                renderEmptyState("No order status data found")
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* QUICK ACTIONS */}
+      {visibleViews.includes("quickActions") && (
+        <div className="dashboard-panel-new quick-actions-panel">
+
+          <div className="dashboard-panel-header">
+            <div>
+              <h3>Quick Actions</h3>
+              <p>Frequently used CRM actions</p>
+            </div>
+          </div>
+
+          <div className="quick-actions">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button key={action.label} className="quick-action" onClick={() => action.to && navigate(action.to)} disabled={!action.to}>
+                  <span className="quick-action-icon">
+                    <Icon size={18} />
+                  </span>
+                  <span>{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* TABLES + ACTIVITY */}
       <div className="dashboard-lower-grid">
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>Top Selling Products</h3>
-              <p>Products with the highest sales</p>
+        {visibleViews.includes("topSellingProducts") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Top Selling Products</h3>
+                <p>Products with the highest sales</p>
+              </div>
+              <button className="panel-view-btn" type="button">View All</button>
             </div>
-            <button className="panel-view-btn" type="button">View All</button>
-          </div>
 
-          <div className="dashboard-table-wrap">
-            {hasProducts ? (
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Product Name</th>
-                    <th>Category</th>
-                    <th>Sold Units</th>
-                    <th>Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.topSellingProducts.map((product, index) => (
-                    <tr key={product._id || product.id || index}>
-                      <td>
-                        <div className="table-primary">
-                          {product.image ? (
-                            <img src={product.image} alt={product.name || "Product"} className="product-thumb" />
-                          ) : (
+            <div className="dashboard-table-wrap">
+              {hasProducts ? (
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Sold Units</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.topSellingProducts.map((product, index) => (
+                      <tr key={product._id || product.id || index}>
+                        <td>
+                          <div className="table-primary">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name || "Product"} className="product-thumb" />
+                            ) : (
+                              <span className="table-icon">
+                                <PackagePlus size={16} />
+                              </span>
+                            )}
+                            <span>{product.name || "—"}</span>
+                          </div>
+                        </td>
+                        <td>{product.category || "—"}</td>
+                        <td>{formatNumber(product.soldUnits)}</td>
+                        <td>{formatCurrency(product.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                renderEmptyState("No product data found")
+              )}
+            </div>
+          </div>
+        )}
+        {visibleViews.includes("topDealers") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Top Dealers</h3>
+                <p>Dealers with the highest performance</p>
+              </div>
+              <button className="panel-view-btn" type="button">View All</button>
+            </div>
+
+            <div className="dashboard-table-wrap">
+              {hasDealers ? (
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Dealer Name</th>
+                      <th>Orders</th>
+                      <th>Sales</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.topDealers.map((dealer, index) => (
+                      <tr key={dealer._id || dealer.id || index}>
+                        <td>
+                          <div className="table-primary">
                             <span className="table-icon">
-                              <PackagePlus size={16} />
+                              <Store size={16} />
                             </span>
-                          )}
-                          <span>{product.name || "—"}</span>
-                        </div>
-                      </td>
-                      <td>{product.category || "—"}</td>
-                      <td>{formatNumber(product.soldUnits)}</td>
-                      <td>{formatCurrency(product.revenue)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              renderEmptyState("No product data found")
-            )}
-          </div>
-        </div>
-
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>Top Dealers</h3>
-              <p>Dealers with the highest performance</p>
-            </div>
-            <button className="panel-view-btn" type="button">View All</button>
-          </div>
-
-          <div className="dashboard-table-wrap">
-            {hasDealers ? (
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Dealer Name</th>
-                    <th>Orders</th>
-                    <th>Sales</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.topDealers.map((dealer, index) => (
-                    <tr key={dealer._id || dealer.id || index}>
-                      <td>
-                        <div className="table-primary">
-                          <span className="table-icon">
-                            <Store size={16} />
-                          </span>
-                          <span>{dealer.name || "—"}</span>
-                        </div>
-                      </td>
-                      <td>{formatNumber(dealer.orders)}</td>
-                      <td>{formatCurrency(dealer.sales)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              renderEmptyState("No dealer data found")
-            )}
-          </div>
-        </div>
-
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>Recent Activity</h3>
-              <p>Latest CRM activities</p>
+                            <span>{dealer.name || "—"}</span>
+                          </div>
+                        </td>
+                        <td>{formatNumber(dealer.orders)}</td>
+                        <td>{formatCurrency(dealer.sales)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                renderEmptyState("No dealer data found")
+              )}
             </div>
           </div>
-
-          <div className="recent-activity-list">
-            {hasActivities
-              ? stats.recentActivities.map((activity, index) => (
-                <div className="recent-activity-item" key={activity._id || activity.id || index}>
-                  <div className="activity-icon">
-                    <Activity size={16} />
-                  </div>
-                  <div className="activity-info">
-                    <strong>{activity.title || activity.message || "Activity"}</strong>
-                    <span>{activity.description || activity.by || "—"}</span>
-                  </div>
-                  <small>{activity.time || "—"}</small>
-                </div>
-              ))
-              : renderEmptyState("No recent activity found")}
-          </div>
-        </div>
-
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>System Overview</h3>
-              <p>Current system health</p>
+        )}
+        {visibleViews.includes("recentActivity") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Recent Activity</h3>
+                <p>Latest CRM activities</p>
+              </div>
             </div>
-          </div>
 
-          <div className="system-overview">
-            {hasSystemData
-              ? stats.systemOverview.map((item, index) => (
-                <div className="system-overview-item" key={item.name || index}>
-                  <div className="system-overview-left">
-                    <span className={`system-status-dot ${item.status || "active"}`} />
-                    <div>
-                      <strong>{item.name || "System"}</strong>
-                      <small>{item.message || item.value || "—"}</small>
+            <div className="recent-activity-list">
+              {hasActivities
+                ? stats.recentActivities.map((activity, index) => (
+                  <div className="recent-activity-item" key={activity._id || activity.id || index}>
+                    <div className="activity-icon">
+                      <Activity size={16} />
                     </div>
+                    <div className="activity-info">
+                      <strong>{activity.title || activity.message || "Activity"}</strong>
+                      <span>{activity.description || activity.by || "—"}</span>
+                    </div>
+                    <small>{activity.time || "—"}</small>
                   </div>
-                  {item.icon === "database" ? <Database size={18} /> : <Server size={18} />}
-                </div>
-              ))
-              : renderEmptyState("No system data found")}
+                ))
+                : renderEmptyState("No recent activity found")}
+            </div>
           </div>
-        </div>
+        )}
+        {visibleViews.includes("systemOverview") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>System Overview</h3>
+                <p>Current system health</p>
+              </div>
+            </div>
+
+            <div className="system-overview">
+              {hasSystemData
+                ? stats.systemOverview.map((item, index) => (
+                  <div className="system-overview-item" key={item.name || index}>
+                    <div className="system-overview-left">
+                      <span className={`system-status-dot ${item.status || "active"}`} />
+                      <div>
+                        <strong>{item.name || "System"}</strong>
+                        <small>{item.message || item.value || "—"}</small>
+                      </div>
+                    </div>
+                    {item.icon === "database" ? <Database size={18} /> : <Server size={18} />}
+                  </div>
+                ))
+                : renderEmptyState("No system data found")}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* KYC / USER STATUS */}
       <div className="dashboard-main-grid">
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>KYC Overview</h3>
-              <p>User verification status</p>
+        {visibleViews.includes("kycOverview") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>KYC Overview</h3>
+                <p>User verification status</p>
+              </div>
+              <button className="panel-view-btn" type="button">View All</button>
             </div>
-            <button className="panel-view-btn" type="button">View All</button>
-          </div>
 
-          <div className="kyc-overview-new">
-            {kycItems.map((item) => (
-              <div className="kyc-status-item" key={item.label}>
-                <div className="kyc-status-left">
-                  <span className={`kyc-status-dot ${item.className}`} />
+            <div className="kyc-overview-new">
+              {kycItems.map((item) => (
+                <div className="kyc-status-item" key={item.label}>
+                  <div className="kyc-status-left">
+                    <span className={`kyc-status-dot ${item.className}`} />
+                    <div>
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </div>
+                  </div>
+                  <strong className="kyc-count">{loading ? "—" : formatNumber(item.value)}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {visibleViews.includes("userStatus") && (
+          <div className="dashboard-panel-new">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>User Status</h3>
+                <p>Current user activity</p>
+              </div>
+              <button className="panel-view-btn" type="button">View All</button>
+            </div>
+
+            <div className="user-status-content">
+              <div className="user-status-chart">
+                <div
+                  className="user-status-circle"
+                  style={{
+                    "--active-percent":
+                      isNumber(stats.totalUsers) && stats.totalUsers > 0
+                        ? `${Math.min(100, Math.max(0, (stats.activeUsers / stats.totalUsers) * 100))}%`
+                        : "0%",
+                  }}
+                >
                   <div>
-                    <strong>{item.label}</strong>
-                    <small>{item.description}</small>
+                    <strong>{loading ? "—" : formatNumber(stats.totalUsers)}</strong>
+                    <span>Total Users</span>
                   </div>
                 </div>
-                <strong className="kyc-count">{loading ? "—" : formatNumber(item.value)}</strong>
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="dashboard-panel-new">
-          <div className="dashboard-panel-header">
-            <div>
-              <h3>User Status</h3>
-              <p>Current user activity</p>
+              <div className="user-status-list">
+                <div className="user-status-row">
+                  <div>
+                    <span className="status-dot active" />
+                    <span>Active Users</span>
+                  </div>
+                  <strong>{loading ? "—" : formatNumber(stats.activeUsers)}</strong>
+                </div>
+
+                <div className="user-status-row">
+                  <div>
+                    <span className="status-dot inactive" />
+                    <span>Inactive Users</span>
+                  </div>
+                  <strong>{loading ? "—" : formatNumber(stats.inactiveUsers)}</strong>
+                </div>
+
+                <div className="user-status-row">
+                  <div>
+                    <span className="status-dot blocked" />
+                    <span>Blocked Users</span>
+                  </div>
+                  <strong>—</strong>
+                </div>
+              </div>
             </div>
-            <button className="panel-view-btn" type="button">View All</button>
           </div>
+        )}
+      </div>
+      {showCustomizeModal && (
+        <div className="dashboard-modal-overlay">
+          <div className="dashboard-customize-modal">
+            <div className="dashboard-modal-header">
+              <div>
+                <h3>Customize Dashboard</h3>
+                <p>Choose which sections you want to display.</p>
+              </div>
 
-          <div className="user-status-content">
-            <div className="user-status-chart">
-              <div
-                className="user-status-circle"
-                style={{
-                  "--active-percent":
-                    isNumber(stats.totalUsers) && stats.totalUsers > 0
-                      ? `${Math.min(100, Math.max(0, (stats.activeUsers / stats.totalUsers) * 100))}%`
-                      : "0%",
+              <button
+                type="button"
+                onClick={() => setShowCustomizeModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="dashboard-modal-body">
+              {DASHBOARD_VIEW_OPTIONS.map((view) => (
+                <label key={view.key} className="dashboard-view-option">
+                  <input
+                    type="checkbox"
+                    checked={draftViews.includes(view.key)}
+                    onChange={(e) => {
+                      setDraftViews((prev) =>
+                        e.target.checked
+                          ? [...prev, view.key]
+                          : prev.filter((item) => item !== view.key)
+                      );
+                    }}
+                  />
+                  <span>{view.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="dashboard-modal-footer">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftViews(visibleViews);
+                  setShowCustomizeModal(false);
                 }}
               >
-                <div>
-                  <strong>{loading ? "—" : formatNumber(stats.totalUsers)}</strong>
-                  <span>Total Users</span>
-                </div>
-              </div>
-            </div>
+                Cancel
+              </button>
 
-            <div className="user-status-list">
-              <div className="user-status-row">
-                <div>
-                  <span className="status-dot active" />
-                  <span>Active Users</span>
-                </div>
-                <strong>{loading ? "—" : formatNumber(stats.activeUsers)}</strong>
-              </div>
-
-              <div className="user-status-row">
-                <div>
-                  <span className="status-dot inactive" />
-                  <span>Inactive Users</span>
-                </div>
-                <strong>{loading ? "—" : formatNumber(stats.inactiveUsers)}</strong>
-              </div>
-
-              <div className="user-status-row">
-                <div>
-                  <span className="status-dot blocked" />
-                  <span>Blocked Users</span>
-                </div>
-                <strong>—</strong>
-              </div>
+              <button
+                type="button"
+                onClick={saveDashboardPreferences}
+                disabled={savingPreferences}
+              >
+                {savingPreferences ? "Saving..." : "Save Changes"}
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </div >
   );
 };
 
