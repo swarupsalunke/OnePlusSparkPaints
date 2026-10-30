@@ -45,6 +45,7 @@ import ApprovalWorkflow from "./pages/superadmin/ApprovalWorkflow";
 import Directory from "./pages/superadmin/Directory";
 import SocialMediaActivities from "./pages/superadmin/SocialMediaActivities";
 import HelpSupport from "./pages/superadmin/HelpSupport";
+import SupplierVendorManagement from "./pages/superadmin/SupplierVendorManagement";
 
 // painter
 import PainterDashboard from "./pages/painter/PainterDashboard";
@@ -226,6 +227,7 @@ const App = () => {
         <Route path="/directory" element={<DashboardLayout><Directory /></DashboardLayout>} />
         <Route path="/social-media-activities" element={<DashboardLayout><SocialMediaActivities /></DashboardLayout>} />
         <Route path="/help-support" element={<DashboardLayout><HelpSupport /></DashboardLayout>} />
+        <Route path="/supplier-vendor-management" element={<DashboardLayout><SupplierVendorManagement /></DashboardLayout>} />
 
         {/* painter */}
 

@@ -47,8 +47,6 @@ const QUANTITY_CHECK_OPTIONS = [
     { value: "MISMATCH", label: "Mismatch" },
 ];
 
-
-
 const EMPTY_FORM = {
     poDate: "",
     vendor: "",

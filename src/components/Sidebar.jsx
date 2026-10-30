@@ -36,6 +36,7 @@ import {
   X,
   House,
   MoreHorizontal,
+
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
@@ -103,6 +104,7 @@ const Sidebar = () => {
     "/sales-visit-planning": "Sales Visit Planning",
     "/notification-management": "Notification & Subscription",
     "/system-settings": "System Settings",
+    "/supplier-vendor-management": "Supplier & Vendor Management",
   };
 
   const currentPageTitle =
@@ -336,6 +338,16 @@ const Sidebar = () => {
           >
             <PackageCheck size={19} />
             <span>Inbound Material Management</span>
+          </NavLink>
+
+          <NavLink
+            to="/supplier-vendor-management"
+            className={({ isActive }) =>
+              `dashboard-nav-item ${isActive ? "active" : ""}`
+            }
+          >
+            <Store size={19} />
+            <span>Supplier & Vendor Management</span>
           </NavLink>
 
           <NavLink
