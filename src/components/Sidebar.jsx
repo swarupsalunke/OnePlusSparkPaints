@@ -105,6 +105,7 @@ const Sidebar = () => {
     "/notification-management": "Notification & Subscription",
     "/system-settings": "System Settings",
     "/supplier-vendor-management": "Supplier & Vendor Management",
+    "/internal-communication": "Internal Communication",
   };
 
   const currentPageTitle =
@@ -480,6 +481,17 @@ const Sidebar = () => {
           >
             <Bell size={19} />
             <span>Notification & Subscription</span>
+          </NavLink>
+
+          {/* Internal Communication */}
+          <NavLink
+            to="/internal-communication"
+            className={({ isActive }) =>
+              `dashboard-nav-item ${isActive ? "active" : ""}`
+            }
+          >
+            <MessageSquare size={19} />
+            <span>Internal Communication</span>
           </NavLink>
 
           {/* <NavLink
