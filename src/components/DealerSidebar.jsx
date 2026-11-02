@@ -17,6 +17,7 @@ import {
   MessageSquareWarning,
   UserCircle,
   X,
+  MessageSquare,
 } from "lucide-react";
 import "../css/dealer/DealerSidebar.css";
 
@@ -45,6 +46,7 @@ const DealerSidebar = ({
     { label: "Complaint Management", icon: MessageSquareWarning },
     { label: "Profile & Support", icon: UserCircle },
     { label: "Contact Support", icon: MessageSquareWarning },
+    { label: "Internal Chat", icon: MessageSquare },
   ];
 
   const handleMenuClick = (label) => {
@@ -112,6 +114,10 @@ const DealerSidebar = ({
 
     if (label === "Contact Support") {
       navigate("/dealer/contact-support");
+    }
+
+    if (label === "Internal Chat") {
+      navigate("/dealer/internal-communication");
     }
 
     onClose?.();

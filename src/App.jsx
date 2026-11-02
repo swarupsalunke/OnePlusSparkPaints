@@ -159,6 +159,7 @@ import DealerNotifications from "./pages/dealer/DealerNotifications";
 import DealerComplaintManagement from "./pages/dealer/DealerComplaintManagement";
 import DealerProfileManagement from "./pages/dealer/DealerProfileManagement";
 import DealerContactSupport from "./pages/dealer/DealerContactSupport";
+import DealerInternalCommunication from "./pages/dealer/DealerInternalCommunication";
 
 // Sales Executive
 import SalesExecutiveLayout from "./layouts/SalesExecutiveLayout";
@@ -351,6 +352,7 @@ const App = () => {
         <Route path="/dealer/complaints" element={<DealerLayout><DealerComplaintManagement /></DealerLayout>} />
         <Route path="/dealer/profile" element={<DealerLayout><DealerProfileManagement /></DealerLayout>} />
         <Route path="/dealer/contact-support" element={<DealerLayout><DealerContactSupport /></DealerLayout>} />
+        <Route path="/dealer/internal-communication" element={<DealerLayout><DealerInternalCommunication /></DealerLayout>}   />
 
 
         {/* Sales Executive */}
