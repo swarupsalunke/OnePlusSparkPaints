@@ -123,7 +123,7 @@ const SalesExecutiveInternalCommunication = () => {
       const response = await axios.post(
         `${CHAT_API_URL}/direct`,
         {
-          participantId: contact._id,
+           targetUserId: contact._id,
         },
         authConfig
       );

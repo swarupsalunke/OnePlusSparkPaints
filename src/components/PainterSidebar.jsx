@@ -104,10 +104,10 @@ const PainterSidebar = ({ isOpen, onClose }) => {
       path: "/painter/contact-us",
     },
     {
-  label: "Internal Chat",
-  icon: MessageSquare,
-  path: "/painter/internal-communication",
-},
+      label: "Internal Chat",
+      icon: MessageSquare,
+      path: "/painter/internal-communication",
+    },
   ];
 
   /* =====================================================
@@ -2332,11 +2332,11 @@ const PainterSidebar = ({ isOpen, onClose }) => {
             className="painter-sidebar-collapse-btn"
             onClick={onClose}
           >
-           <span>
-  Need Help
-  <br />
-  WhatsApp Support
-</span>
+            <span>
+              Need Help
+              <br />
+              WhatsApp Support
+            </span>
           </button>
 
         </div>
