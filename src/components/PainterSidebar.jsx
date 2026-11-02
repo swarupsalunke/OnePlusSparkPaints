@@ -103,6 +103,11 @@ const PainterSidebar = ({ isOpen, onClose }) => {
       icon: HelpCircle,
       path: "/painter/contact-us",
     },
+    {
+  label: "Internal Chat",
+  icon: MessageSquare,
+  path: "/painter/internal-communication",
+},
   ];
 
   /* =====================================================

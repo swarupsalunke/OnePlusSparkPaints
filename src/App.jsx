@@ -132,6 +132,7 @@ import PainterPerformanceDashboard from "./pages/painter/PainterPerformanceDashb
 import PainterMonthlyPerformance from "./pages/painter/PainterMonthlyPerformance";
 import PainterMilestoneProgress from "./pages/painter/PainterMilestoneProgress";
 import PainterLeaderboard from "./pages/painter/PainterLeaderboard";
+import PainterInternalCommunication from "./pages/painter/PainterInternalCommunication";
 
 // Dealer
 import DealerLayout from "./layouts/DealerLayout";
@@ -322,6 +323,7 @@ const App = () => {
         <Route path="/painter/analytics/monthly-performance" element={<PainterLayout><PainterMonthlyPerformance /></PainterLayout>} />
         <Route path="/painter/analytics/milestone-progress" element={<PainterLayout><PainterMilestoneProgress /></PainterLayout>} />
         <Route path="/painter/analytics/leaderboard" element={<PainterLayout><PainterLeaderboard /></PainterLayout>} />
+        <Route path="/painter/internal-communication" element={<PainterLayout><PainterInternalCommunication /></PainterLayout>} />
 
 
         {/* Dealer */}
