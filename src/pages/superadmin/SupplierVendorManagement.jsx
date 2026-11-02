@@ -24,6 +24,8 @@ const SupplierVendorManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [categoryFilter, setCategoryFilter] = useState("");
+
   const [showModal, setShowModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -39,7 +41,14 @@ const SupplierVendorManagement = () => {
     address: "",
     pincode: "",
     state: "",
-    items: [{ itemName: "", gstTax: "" }],
+    items: [
+      {
+        itemName: "",
+        category: "",
+        description: "",
+        gstTax: "",
+      },
+    ],
   };
 
   const [formData, setFormData] = useState(initialForm);
@@ -103,7 +112,15 @@ const SupplierVendorManagement = () => {
   const addItem = () => {
     setFormData((prev) => ({
       ...prev,
-      items: [...prev.items, { itemName: "", gstTax: "" }],
+      items: [
+        ...prev.items,
+        {
+          itemName: "",
+          category: "",
+          description: "",
+          gstTax: "",
+        },
+      ],
     }));
   };
 
@@ -143,10 +160,19 @@ const SupplierVendorManagement = () => {
       state: supplier.state || "",
       items: supplier.items?.length
         ? supplier.items.map((item) => ({
-            itemName: item.itemName,
-            gstTax: item.gstTax,
-          }))
-        : [{ itemName: "", gstTax: "" }],
+          itemName: item.itemName || "",
+          category: item.category || "",
+          description: item.description || "",
+          gstTax: item.gstTax ?? "",
+        }))
+        : [
+          {
+            itemName: "",
+            category: "",
+            description: "",
+            gstTax: "",
+          },
+        ],
     });
 
     setShowModal(true);
@@ -162,6 +188,8 @@ const SupplierVendorManagement = () => {
         .filter((item) => item.itemName.trim() !== "")
         .map((item) => ({
           itemName: item.itemName.trim(),
+          category: item.category.trim(),
+          description: item.description.trim(),
           gstTax: Number(item.gstTax),
         })),
     };
@@ -233,17 +261,42 @@ const SupplierVendorManagement = () => {
     setSelectedSupplier(supplier);
     setShowDetailsModal(true);
   };
+  // CATEGORY OPTIONS
+  const categoryOptions = [
+    ...new Set(
+      suppliers.flatMap((supplier) =>
+        (supplier.items || [])
+          .map((item) => item.category?.trim())
+          .filter(Boolean)
+      )
+    ),
+  ].sort((a, b) => a.localeCompare(b));
 
-  // SEARCH
+  // SEARCH AND CATEGORY FILTER
   const filteredSuppliers = suppliers.filter((supplier) => {
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm.trim().toLowerCase();
 
-    return (
+    const supplierMatch =
       supplier.supplierCompanyName?.toLowerCase().includes(search) ||
       supplier.contactPersonName?.toLowerCase().includes(search) ||
       supplier.mobileNo?.includes(search) ||
-      supplier.gstNo?.toLowerCase().includes(search)
+      supplier.gstNo?.toLowerCase().includes(search);
+
+    const itemMatch = (supplier.items || []).some((item) =>
+      [
+        item.itemName,
+        item.category,
+        item.description,
+      ].some((value) => value?.toLowerCase().includes(search))
     );
+
+    const categoryMatch =
+      !categoryFilter ||
+      (supplier.items || []).some(
+        (item) => item.category?.trim() === categoryFilter
+      );
+
+    return (supplierMatch || itemMatch) && categoryMatch;
   });
 
   return (
@@ -309,6 +362,20 @@ const SupplierVendorManagement = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+
+          <select
+            className="supplier-category-filter"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="">All Categories</option>
+
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="supplier-table-wrapper">
@@ -564,6 +631,30 @@ const SupplierVendorManagement = () => {
                     </div>
 
                     <div className="supplier-form-group">
+                      <label>Stock Category / Group</label>
+                      <input
+                        type="text"
+                        value={item.category}
+                        onChange={(e) =>
+                          handleItemChange(index, "category", e.target.value)
+                        }
+                        placeholder="Enter stock category"
+                      />
+                    </div>
+
+                    <div className="supplier-form-group">
+                      <label>Item Description / Narration</label>
+                      <textarea
+                        value={item.description}
+                        onChange={(e) =>
+                          handleItemChange(index, "description", e.target.value)
+                        }
+                        placeholder="Enter item description"
+                        rows="2"
+                      />
+                    </div>
+
+                    <div className="supplier-form-group">
                       <label>GST Tax (%)</label>
                       <input
                         type="number"
@@ -683,6 +774,8 @@ const SupplierVendorManagement = () => {
                 <thead>
                   <tr>
                     <th>Item Name</th>
+                    <th>Category / Group</th>
+                    <th>Description</th>
                     <th>GST Tax (%)</th>
                   </tr>
                 </thead>
@@ -692,12 +785,14 @@ const SupplierVendorManagement = () => {
                     selectedSupplier.items.map((item) => (
                       <tr key={item._id}>
                         <td>{item.itemName}</td>
+                        <td>{item.category || "-"}</td>
+                        <td>{item.description || "-"}</td>
                         <td>{item.gstTax}%</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="2">No items added</td>
+                      <td colSpan="4">No items added</td>
                     </tr>
                   )}
                 </tbody>
