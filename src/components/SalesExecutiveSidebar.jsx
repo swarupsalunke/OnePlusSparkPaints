@@ -45,6 +45,7 @@ const SalesExecutiveSidebar = ({
     { label: "Analytics Dashboard", path: "/sales-executive/analytics-dashboard", icon: Activity },
     { label: "Follow Up Management", path: "/sales-executive/follow-up-management", icon: CalendarDays },
     { label: "Profile Management", path: "/sales-executive/profile-management", icon: Users },
+    { label: "Internal Chat", icon: MessageSquare, path: "/sales-executive/internal-communication" },
   ];
 
   return (

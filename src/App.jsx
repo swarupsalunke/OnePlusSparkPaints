@@ -180,6 +180,7 @@ import DownloadCentre from "./pages/salesExecutive/DownloadCentre";
 import AnalyticsDashboard from "./pages/salesExecutive/AnalyticsDashboard";
 import SalesFollowUpManagement from "./pages/salesExecutive/FollowUpManagement";
 import SalesProfileManagement from "./pages/salesExecutive/SalesProfileManagement";
+import SalesExecutiveInternalCommunication from "./pages/salesExecutive/SalesExecutiveInternalCommunication";
 
 
 
@@ -373,6 +374,7 @@ const App = () => {
         <Route path="/sales-executive/analytics-dashboard" element={<SalesExecutiveLayout><AnalyticsDashboard /></SalesExecutiveLayout>} />
         <Route path="/sales-executive/follow-up-management" element={<SalesExecutiveLayout><SalesFollowUpManagement /></SalesExecutiveLayout>} />
         <Route path="/sales-executive/profile-management" element={<SalesExecutiveLayout><SalesProfileManagement /></SalesExecutiveLayout>} />
+        <Route path="/sales-executive/internal-communication" element={<SalesExecutiveLayout><SalesExecutiveInternalCommunication /></SalesExecutiveLayout>} />
 
 
 
