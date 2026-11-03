@@ -954,6 +954,14 @@ const UserManagement = () => {
 
                     <button
                         className="users-secondary-btn"
+                        onClick={handleDownloadTemplate}
+                    >
+                        <Download size={16} />
+                        Download Template
+                    </button>
+
+                    <button
+                        className="users-secondary-btn"
                         onClick={() =>
                             document.getElementById("users-import-file").click()
                         }
@@ -2244,30 +2252,30 @@ const UserManagement = () => {
                         </div>
 
                         <div className="import-preview-footer">
-    <button
-        type="button"
-        onClick={() => {
-            setShowImportPreview(false);
-            setImportPasswords({});
-            setImportResult(null);
-        }}
-    >
-        Cancel
-    </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowImportPreview(false);
+                                    setImportPasswords({});
+                                    setImportResult(null);
+                                }}
+                            >
+                                Cancel
+                            </button>
 
-    <button
-        type="button"
-        onClick={handleConfirmImport}
-        disabled={
-            importConfirmLoading ||
-            validImportRows.length === 0
-        }
-    >
-        {importConfirmLoading
-            ? "Importing..."
-            : `Confirm Import (${validImportRows.length})`}
-    </button>
-</div>
+                            <button
+                                type="button"
+                                onClick={handleConfirmImport}
+                                disabled={
+                                    importConfirmLoading ||
+                                    validImportRows.length === 0
+                                }
+                            >
+                                {importConfirmLoading
+                                    ? "Importing..."
+                                    : `Confirm Import (${validImportRows.length})`}
+                            </button>
+                        </div>
 
                     </div>
                 </div>
