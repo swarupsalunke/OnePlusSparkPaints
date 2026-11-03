@@ -141,6 +141,46 @@ const UserManagement = () => {
     };
 
     // ==========================================
+    // DOWNLOAD IMPORT TEMPLATE
+    // ==========================================
+
+    const handleDownloadTemplate = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                "https://oneplussparkpaintsserver.onrender.com/api/users/import-template",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    responseType: "blob",
+                }
+            );
+
+            const blob = new Blob([response.data], {
+                type: "text/csv;charset=utf-8;",
+            });
+
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = downloadUrl;
+            link.setAttribute("download", "users-import-template.csv");
+
+            document.body.appendChild(link);
+            link.click();
+
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+        } catch (error) {
+            console.error("Download template error:", error);
+            alert("Failed to download import template.");
+        }
+    };
+
+    // ==========================================
     // FILTER
     // ==========================================
 
@@ -774,7 +814,10 @@ const UserManagement = () => {
 
                 <div className="users-header-actions">
 
-                    <button className="users-secondary-btn">
+                    <button
+                        className="users-secondary-btn"
+                        onClick={handleDownloadTemplate}
+                    >
                         <Upload size={16} />
                         Import
                     </button>
