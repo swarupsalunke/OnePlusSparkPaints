@@ -44,6 +44,10 @@ const UserManagement = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [viewLoading, setViewLoading] = useState(false);
 
+    const [importPasswords, setImportPasswords] = useState({});
+    const [importConfirmLoading, setImportConfirmLoading] = useState(false);
+    const [importResult, setImportResult] = useState(null);
+
     const [deletingUser, setDeletingUser] = useState(false);
     const [kycActionLoading, setKycActionLoading] = useState(false);
 
@@ -223,6 +227,80 @@ const UserManagement = () => {
                 error.response?.data?.message ||
                 "Failed to preview CSV file."
             );
+        }
+    };
+
+    const handleImportPasswordChange = (rowNumber, password) => {
+        setImportPasswords((prev) => ({
+            ...prev,
+            [rowNumber]: password,
+        }));
+    };
+    const handleConfirmImport = async () => {
+        if (validImportRows.length === 0) {
+            alert("No valid users available for import.");
+            return;
+        }
+
+        const missingPassword = validImportRows.find(
+            (item) => !importPasswords[item.rowNumber]?.trim()
+        );
+
+        if (missingPassword) {
+            alert(
+                `Please enter password for ${missingPassword.user.name} (Row ${missingPassword.rowNumber}).`
+            );
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Are you sure you want to import ${validImportRows.length} users?`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setImportConfirmLoading(true);
+
+            const token = localStorage.getItem("token");
+
+            const users = validImportRows.map((item) => ({
+                rowNumber: item.rowNumber,
+                user: item.user,
+                password: importPasswords[item.rowNumber],
+            }));
+
+            const response = await axios.post(
+                "https://oneplussparkpaintsserver.onrender.com/api/users/import-confirm",
+                { users },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                setImportResult(response.data);
+
+                setImportPasswords({});
+
+                await fetchUsers();
+
+                alert(
+                    `Import completed!\nCreated: ${response.data.summary.created}\nFailed: ${response.data.summary.failed}`
+                );
+            }
+        } catch (error) {
+            console.error("Confirm import error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to import users."
+            );
+        } finally {
+            setImportConfirmLoading(false);
         }
     };
 
@@ -2095,6 +2173,7 @@ const UserManagement = () => {
                                         <th>Email</th>
                                         <th>Mobile</th>
                                         <th>Role</th>
+                                        <th>Password</th>
                                     </tr>
                                 </thead>
 
@@ -2107,6 +2186,19 @@ const UserManagement = () => {
                                             <td>{item.user.email}</td>
                                             <td>{item.user.mobile}</td>
                                             <td>{item.user.role}</td>
+                                            <td>
+                                                <input
+                                                    type="password"
+                                                    placeholder="Enter password"
+                                                    value={importPasswords[item.rowNumber] || ""}
+                                                    onChange={(e) =>
+                                                        handleImportPasswordChange(
+                                                            item.rowNumber,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -2150,6 +2242,32 @@ const UserManagement = () => {
                                 <p>No invalid users found.</p>
                             )}
                         </div>
+
+                        <div className="import-preview-footer">
+    <button
+        type="button"
+        onClick={() => {
+            setShowImportPreview(false);
+            setImportPasswords({});
+            setImportResult(null);
+        }}
+    >
+        Cancel
+    </button>
+
+    <button
+        type="button"
+        onClick={handleConfirmImport}
+        disabled={
+            importConfirmLoading ||
+            validImportRows.length === 0
+        }
+    >
+        {importConfirmLoading
+            ? "Importing..."
+            : `Confirm Import (${validImportRows.length})`}
+    </button>
+</div>
 
                     </div>
                 </div>
