@@ -375,48 +375,48 @@ const AddUser = () => {
 
 
   const fetchReportingUsers = async () => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        "https://oneplussparkpaintsserver.onrender.com/api/users",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to load reporting users");
+    const response = await fetch(
+      "https://oneplussparkpaintsserver.onrender.com/api/users",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      const seniorRoles = [
-        "SUPER_ADMIN",
-        "DIRECTOR",
-        "SALES_MANAGER",
-        "PRODUCTION_MANAGER",
-        "ACCOUNT_MANAGER",
-        "MARKETING_MANAGER",
-        "STORE_MANAGER",
-        "HR_ADMIN_EXECUTIVE",
-        "MANAGER", // Legacy users
-      ].includes(user.role)
+    const data = await response.json();
 
-      setReportingUsers(
-        (data.users || []).filter(
-          (user) =>
-            seniorRoles.includes(user.role) &&
-            user.status === "ACTIVE" &&
-            user._id !== id
-        )
-      );
-    } catch (error) {
-      console.error("Reporting users fetch error:", error);
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to load reporting users");
     }
-  };
+
+    const seniorRoles = [
+      "SUPER_ADMIN",
+      "DIRECTOR",
+      "SALES_MANAGER",
+      "PRODUCTION_MANAGER",
+      "ACCOUNT_MANAGER",
+      "MARKETING_MANAGER",
+      "STORE_MANAGER",
+      "HR_ADMIN_EXECUTIVE",
+      "MANAGER",
+    ];
+
+    setReportingUsers(
+      (data.users || []).filter(
+        (user) =>
+          seniorRoles.includes(user.role) &&
+          user.status === "ACTIVE" &&
+          user._id !== id
+      )
+    );
+  } catch (error) {
+    console.error("Reporting users fetch error:", error);
+  }
+};
 
   useEffect(() => {
     fetchReportingUsers();
