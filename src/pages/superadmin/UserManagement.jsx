@@ -13,6 +13,7 @@ import {
     Filter,
     ChevronLeft,
     ChevronRight,
+    X,
 } from "lucide-react";
 
 import "../../css/superadmin/usermanagement.css";
@@ -34,6 +35,10 @@ const UserManagement = () => {
     const [role, setRole] = useState("All Roles");
     const [status, setStatus] = useState("All Status");
     const [department, setDepartment] = useState("All Departments");
+    const [showImportPreview, setShowImportPreview] = useState(false);
+    const [importSummary, setImportSummary] = useState(null);
+    const [validImportRows, setValidImportRows] = useState([]);
+    const [invalidImportRows, setInvalidImportRows] = useState([]);
 
     const [showViewUser, setShowViewUser] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -177,6 +182,47 @@ const UserManagement = () => {
         } catch (error) {
             console.error("Download template error:", error);
             alert("Failed to download import template.");
+        }
+    };
+
+    const handlePreviewImport = async (file) => {
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith(".csv")) {
+            alert("Please select a CSV file.");
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem("token");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await axios.post(
+                "https://oneplussparkpaintsserver.onrender.com/api/users/import-preview",
+                // "http://localhost:5000/api/users/import-preview",
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setImportSummary(response.data.summary);
+            setValidImportRows(response.data.validRows);
+            setInvalidImportRows(response.data.invalidRows);
+
+            setShowImportPreview(true);
+
+        } catch (error) {
+            console.error("Import preview error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to preview CSV file."
+            );
         }
     };
 
@@ -814,14 +860,29 @@ const UserManagement = () => {
 
                 <div className="users-header-actions">
 
+                    <input
+                        type="file"
+                        accept=".csv"
+                        id="users-import-file"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                handlePreviewImport(file);
+                            }
+                            e.target.value = "";
+                        }}
+                    />
+
                     <button
                         className="users-secondary-btn"
-                        onClick={handleDownloadTemplate}
+                        onClick={() =>
+                            document.getElementById("users-import-file").click()
+                        }
                     >
                         <Upload size={16} />
                         Import
                     </button>
-
                     <button
                         className="users-secondary-btn"
                         onClick={handleExportUsers}
@@ -1986,6 +2047,112 @@ const UserManagement = () => {
 
                 </div>
 
+            )}
+
+            {showImportPreview && (
+                <div className="import-preview-overlay">
+                    <div className="import-preview-modal">
+
+                        <div className="import-preview-header">
+                            <h2>Import Users Preview</h2>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowImportPreview(false)}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {importSummary && (
+                            <div className="import-preview-summary">
+                                <div>
+                                    <span>Total Rows</span>
+                                    <strong>{importSummary.totalRows}</strong>
+                                </div>
+
+                                <div>
+                                    <span>Valid Rows</span>
+                                    <strong>{importSummary.validRows}</strong>
+                                </div>
+
+                                <div>
+                                    <span>Invalid Rows</span>
+                                    <strong>{importSummary.invalidRows}</strong>
+                                </div>
+                            </div>
+                        )}
+
+                        <h3>Valid Users</h3>
+
+                        <div className="import-preview-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {validImportRows.map((item) => (
+                                        <tr key={item.rowNumber}>
+                                            <td>{item.rowNumber}</td>
+                                            <td>{item.user.userId}</td>
+                                            <td>{item.user.name}</td>
+                                            <td>{item.user.email}</td>
+                                            <td>{item.user.mobile}</td>
+                                            <td>{item.user.role}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {validImportRows.length === 0 && (
+                                <p>No valid users found.</p>
+                            )}
+                        </div>
+
+                        <h3>Invalid Users</h3>
+
+                        <div className="import-preview-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Errors</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {invalidImportRows.map((item) => (
+                                        <tr key={item.rowNumber}>
+                                            <td>{item.rowNumber}</td>
+                                            <td>{item.user.userId}</td>
+                                            <td>{item.user.name}</td>
+                                            <td>{item.user.email}</td>
+                                            <td>
+                                                {item.errors.join(", ")}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {invalidImportRows.length === 0 && (
+                                <p>No invalid users found.</p>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
             )}
 
         </div>

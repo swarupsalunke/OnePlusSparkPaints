@@ -1071,3 +1071,129 @@
     font-size: 13px;
     font-weight: 500;
 }
+/* ================= IMPORT PREVIEW MODAL ================= */
+
+.import-preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.import-preview-modal {
+    background: #ffffff;
+    width: 100%;
+    max-width: 1100px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.import-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.import-preview-header h2 {
+    font-size: 21px;
+    color: #263449;
+    margin: 0;
+}
+
+.import-preview-header button {
+    border: none;
+    background: #f1f5f9;
+    color: #475569;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.import-preview-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.import-preview-summary div {
+    background: #f8fafc;
+    border: 1px solid #e7ebf1;
+    border-radius: 9px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.import-preview-summary span {
+    font-size: 13px;
+    color: #718096;
+}
+
+.import-preview-summary strong {
+    font-size: 24px;
+    color: #263449;
+}
+
+.import-preview-modal h3 {
+    font-size: 16px;
+    color: #263449;
+    margin: 22px 0 12px;
+}
+
+.import-preview-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e7ebf1;
+    border-radius: 8px;
+}
+
+.import-preview-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+.import-preview-table-wrapper th,
+.import-preview-table-wrapper td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e7ebf1;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.import-preview-table-wrapper th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
+.import-preview-table-wrapper td {
+    color: #263449;
+}
+
+.import-preview-table-wrapper p {
+    padding: 14px;
+    color: #718096;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .import-preview-modal {
+        padding: 16px;
+    }
+
+    .import-preview-summary {
+        grid-template-columns: 1fr;
+    }
+}
