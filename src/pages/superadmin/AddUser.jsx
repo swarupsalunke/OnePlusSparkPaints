@@ -118,13 +118,18 @@ const AddUser = () => {
   const roleOptions = [
     "SUPER_ADMIN",
     "DIRECTOR",
-    "MANAGER",
+    "SALES_MANAGER",
+    "PRODUCTION_MANAGER",
+    "ACCOUNT_MANAGER",
+    "MARKETING_MANAGER",
+    "STORE_MANAGER",
+    "HR_ADMIN_EXECUTIVE",
     "SALES_EXECUTIVE",
     "ACCOUNTANT",
     "STORE_CASHIER",
     "DEALER",
     "PAINTER",
-  ];
+  ]
 
   const departmentOptions = [
     "Administration",
@@ -391,8 +396,14 @@ const AddUser = () => {
       const seniorRoles = [
         "SUPER_ADMIN",
         "DIRECTOR",
-        "MANAGER",
-      ];
+        "SALES_MANAGER",
+        "PRODUCTION_MANAGER",
+        "ACCOUNT_MANAGER",
+        "MARKETING_MANAGER",
+        "STORE_MANAGER",
+        "HR_ADMIN_EXECUTIVE",
+        "MANAGER", // Legacy users
+      ].includes(user.role)
 
       setReportingUsers(
         (data.users || []).filter(

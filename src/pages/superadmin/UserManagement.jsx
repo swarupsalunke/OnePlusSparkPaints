@@ -50,6 +50,7 @@ const UserManagement = () => {
         "Management",
         "Sales",
         "Finance",
+        "Marketing",
         "Store",
         "Inventory",
         "Dealer Management",
@@ -96,6 +97,46 @@ const UserManagement = () => {
             );
         } finally {
             setLoading(false);
+        }
+    };
+
+    // ==========================================
+    // EXPORT USERS
+    // ==========================================
+
+    const handleExportUsers = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                "https://oneplussparkpaintsserver.onrender.com/api/users/export",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    responseType: "blob",
+                }
+            );
+
+            const blob = new Blob([response.data], {
+                type: "text/csv;charset=utf-8;",
+            });
+
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = downloadUrl;
+            link.setAttribute("download", "users-export.csv");
+
+            document.body.appendChild(link);
+            link.click();
+
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+        } catch (error) {
+            console.error("Export users error:", error);
+            alert("Failed to export users. Please try again.");
         }
     };
 
@@ -224,6 +265,12 @@ const UserManagement = () => {
                 return "role-director";
 
             case "MANAGER":
+            case "SALES_MANAGER":
+            case "PRODUCTION_MANAGER":
+            case "ACCOUNT_MANAGER":
+            case "MARKETING_MANAGER":
+            case "STORE_MANAGER":
+            case "HR_ADMIN_EXECUTIVE":
                 return "role-manager";
 
             case "SALES_EXECUTIVE":
@@ -732,7 +779,10 @@ const UserManagement = () => {
                         Import
                     </button>
 
-                    <button className="users-secondary-btn">
+                    <button
+                        className="users-secondary-btn"
+                        onClick={handleExportUsers}
+                    >
                         <Download size={16} />
                         Export
                     </button>
@@ -873,12 +923,18 @@ const UserManagement = () => {
                             <option>All Roles</option>
                             <option>SUPER_ADMIN</option>
                             <option>DIRECTOR</option>
-                            <option>MANAGER</option>
+                            <option>SALES_MANAGER</option>
+                            <option>PRODUCTION_MANAGER</option>
+                            <option>ACCOUNT_MANAGER</option>
+                            <option>MARKETING_MANAGER</option>
+                            <option>STORE_MANAGER</option>
+                            <option>HR_ADMIN_EXECUTIVE</option>
                             <option>SALES_EXECUTIVE</option>
                             <option>ACCOUNTANT</option>
                             <option>STORE_CASHIER</option>
                             <option>DEALER</option>
                             <option>PAINTER</option>
+                            <option>MANAGER</option>
                         </select>
 
                     </div>
@@ -1896,7 +1952,6 @@ const UserManagement = () => {
 // ==========================================
 // DEPARTMENT
 // ==========================================
-
 const getDepartment = (role) => {
     switch (role) {
         case "SUPER_ADMIN":
@@ -1906,16 +1961,26 @@ const getDepartment = (role) => {
             return "Management";
 
         case "MANAGER":
-            return "Sales";
-
+        case "SALES_MANAGER":
         case "SALES_EXECUTIVE":
             return "Sales";
 
+        case "PRODUCTION_MANAGER":
+            return "Manufacturing";
+
+        case "ACCOUNT_MANAGER":
         case "ACCOUNTANT":
             return "Finance";
 
+        case "MARKETING_MANAGER":
+            return "Marketing";
+
+        case "STORE_MANAGER":
         case "STORE_CASHIER":
             return "Store";
+
+        case "HR_ADMIN_EXECUTIVE":
+            return "HR";
 
         case "DEALER":
             return "Dealer Management";
