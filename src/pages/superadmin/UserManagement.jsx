@@ -1478,11 +1478,11 @@ const UserManagement = () => {
 
                                                 {/* MORE */}
 
-                                                <button title="More">
+                                                {/* <button title="More">
                                                     <MoreVertical
                                                         size={16}
                                                     />
-                                                </button>
+                                                </button> */}
 
                                             </div>
 
