@@ -2060,7 +2060,7 @@ const UserManagement = () => {
 
                                 {/* EMERGENCY CONTACT */}
 
-                                <div className="view-user-section">
+                                {/* <div className="view-user-section">
 
                                     <h4>
                                         Emergency Contact
@@ -2109,7 +2109,7 @@ const UserManagement = () => {
 
                                     </div>
 
-                                </div>
+                                </div> */}
 
                                 {/* FOOTER */}
 
