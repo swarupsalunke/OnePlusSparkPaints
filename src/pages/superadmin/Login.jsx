@@ -50,7 +50,11 @@ const Login = () => {
       // Validate selected role against the authenticated user's role.
       const userRole = data.user?.role;
       const roleMap = {
-        ADMIN: ["SUPER_ADMIN", "ADMIN"],
+        ADMIN: ["SUPER_ADMIN", "DIRECTOR"],
+
+        // Future mein separate ADMIN role chahiye toh:
+        // ADMIN: ["SUPER_ADMIN", "DIRECTOR", "ADMIN"],
+
         PAINTER: ["PAINTER"],
         DEALER: ["DEALER"],
         SALES_EXECUTIVE: ["SALES_EXECUTIVE"],
