@@ -932,7 +932,7 @@ const UserManagement = () => {
                     <div className="users-breadcrumb">
                         Dashboard
                         <span>›</span>
-                        User Managementssssssssssssssssssssssssssssssssssssssssssssss
+                        User Management
                     </div>
                 </div>
 
@@ -1759,7 +1759,13 @@ const UserManagement = () => {
                                             </label>
 
                                             <strong>
-                                                {selectedUser.address ||
+                                                {[
+                                                    selectedUser.addressLine1,
+                                                    selectedUser.addressLine2,
+                                                ]
+                                                    .filter((item) => item?.trim())
+                                                    .join(", ") ||
+                                                    selectedUser.address ||
                                                     "-"}
                                             </strong>
                                         </div>
@@ -1775,7 +1781,7 @@ const UserManagement = () => {
                                             </strong>
                                         </div>
 
-                                        <div>
+                                        {/* <div>
                                             <label>
                                                 District
                                             </label>
@@ -1784,7 +1790,7 @@ const UserManagement = () => {
                                                 {selectedUser.district ||
                                                     "-"}
                                             </strong>
-                                        </div>
+                                        </div> */}
 
                                         <div>
                                             <label>
