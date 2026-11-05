@@ -14,6 +14,7 @@ import {
   CalendarDays,
   ChevronDown,
   UserPlus,
+  ShieldCheck
 } from "lucide-react";
 
 import "../../css/superadmin/addUser.css";
@@ -43,6 +44,8 @@ const AddUser = () => {
 
   const [profilePreview, setProfilePreview] =
     useState("");
+
+  const [dealerUsers, setDealerUsers] = useState([]);
 
   // ==========================================
   // FORM DATA
@@ -78,6 +81,21 @@ const AddUser = () => {
     notes: "",
 
     profilePicture: "",
+
+    designation: "",
+    branch: "",
+    territory: "",
+    assignedDealers: [],
+    language: "English",
+
+    notifications: {
+      email: true,
+      push: true,
+      sms: true,
+    },
+
+    employeeWorkStatus: "WORKING",
+    dealerApprovalStatus: "PENDING",
   });
 
   // ==========================================
@@ -270,6 +288,27 @@ const AddUser = () => {
 
         profilePicture:
           user.profilePicture || "",
+
+        designation: user.designation || "",
+        branch: user.branch || "",
+        territory: user.territory || "",
+
+        assignedDealers: Array.isArray(user.assignedDealers)
+          ? user.assignedDealers.map((dealer) =>
+            typeof dealer === "object" ? dealer._id : dealer
+          )
+          : [],
+
+        language: user.language || "English",
+
+        notifications: {
+          email: user.notifications?.email ?? true,
+          push: user.notifications?.push ?? true,
+          sms: user.notifications?.sms ?? true,
+        },
+
+        employeeWorkStatus: user.employeeWorkStatus || "WORKING",
+        dealerApprovalStatus: user.dealerApprovalStatus || "PENDING",
       });
 
       // Existing profile picture
@@ -375,51 +414,71 @@ const AddUser = () => {
 
 
   const fetchReportingUsers = async () => {
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      "https://oneplussparkpaintsserver.onrender.com/api/users",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(
+        "https://oneplussparkpaintsserver.onrender.com/api/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load reporting users");
       }
-    );
 
-    const data = await response.json();
+      const seniorRoles = [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "SALES_MANAGER",
+        "PRODUCTION_MANAGER",
+        "ACCOUNT_MANAGER",
+        "MARKETING_MANAGER",
+        "STORE_MANAGER",
+        "HR_ADMIN_EXECUTIVE",
+        "MANAGER",
+      ];
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to load reporting users");
+      setReportingUsers(
+        (data.users || []).filter(
+          (user) =>
+            seniorRoles.includes(user.role) &&
+            user.status === "ACTIVE" &&
+            user._id !== id
+        )
+      );
+    } catch (error) {
+      console.error("Reporting users fetch error:", error);
     }
+  };
+  const fetchDealerUsers = async () => {
+    try {
+      const response = await axios.get(
+        "https://oneplussparkpaintsserver.onrender.com/api/users"
+      );
 
-    const seniorRoles = [
-      "SUPER_ADMIN",
-      "DIRECTOR",
-      "SALES_MANAGER",
-      "PRODUCTION_MANAGER",
-      "ACCOUNT_MANAGER",
-      "MARKETING_MANAGER",
-      "STORE_MANAGER",
-      "HR_ADMIN_EXECUTIVE",
-      "MANAGER",
-    ];
+      const users = response.data.users || response.data;
 
-    setReportingUsers(
-      (data.users || []).filter(
-        (user) =>
-          seniorRoles.includes(user.role) &&
-          user.status === "ACTIVE" &&
-          user._id !== id
-      )
-    );
-  } catch (error) {
-    console.error("Reporting users fetch error:", error);
-  }
-};
+      setDealerUsers(
+        users.filter(
+          (user) =>
+            user.role === "DEALER" &&
+            user.status === "ACTIVE"
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching dealers:", error);
+    }
+  };
 
   useEffect(() => {
     fetchReportingUsers();
+    fetchDealerUsers();
   }, [id]);
   // ==========================================
   // SAVE / UPDATE USER
@@ -557,6 +616,35 @@ const AddUser = () => {
       data.append(
         "department",
         formData.department || ""
+      );
+
+      // ROLE & REPORTING DETAILS
+      data.append("designation", formData.designation || "");
+      data.append("branch", formData.branch || "");
+      data.append("territory", formData.territory || "");
+
+      // ASSIGNED DEALERS
+      data.append(
+        "assignedDealers",
+        JSON.stringify(formData.assignedDealers || [])
+      );
+
+      // OTHER DETAILS
+      data.append("language", formData.language || "English");
+
+      data.append(
+        "notifications",
+        JSON.stringify(formData.notifications)
+      );
+
+      data.append(
+        "employeeWorkStatus",
+        formData.employeeWorkStatus || "WORKING"
+      );
+
+      data.append(
+        "dealerApprovalStatus",
+        formData.dealerApprovalStatus || "PENDING"
       );
 
       data.append(
@@ -727,15 +815,518 @@ const AddUser = () => {
   // ==========================================
 
   const renderEmptyTab = () => {
+    if (activeTab === "Work Details") {
+      return (
+        <form
+          id="add-user-form"
+          onSubmit={handleSaveUser}
+          className="add-user-form"
+        >
+          <div className="add-user-grid">
+            <section className="add-user-card">
+              <div className="add-user-card-header">
+                <div className="add-user-card-icon">
+                  <UsersRound size={22} />
+                </div>
+                <h2>Work Details</h2>
+              </div>
+
+              <div className="add-user-fields">
+                {/* USER ROLE */}
+                <div className="add-user-field full">
+                  <label>
+                    User Role <span>*</span>
+                  </label>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select role</option>
+                      {roleOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+
+                {/* REPORTING TO */}
+                <div className="add-user-field full">
+                  <label>Reporting To</label>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="reportingTo"
+                      value={formData.reportingTo}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select reporting manager</option>
+
+                      {reportingUsers.map((user) => (
+                        <option key={user._id} value={user._id}>
+                          {user.name} ({user.role.replaceAll("_", " ")})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+
+                {/* DEPARTMENT */}
+                <div className="add-user-field full">
+                  <label>Department</label>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="department"
+                      value={formData.department}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select department</option>
+
+                      {departmentOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+
+                {/* DESIGNATION */}
+                <div className="add-user-field">
+                  <label>Designation</label>
+                  <input
+                    type="text"
+                    name="designation"
+                    placeholder="Enter designation"
+                    value={formData.designation}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* BRANCH */}
+                <div className="add-user-field">
+                  <label>Branch</label>
+                  <input
+                    type="text"
+                    name="branch"
+                    placeholder="Enter branch"
+                    value={formData.branch}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* TERRITORY */}
+                <div className="add-user-field full">
+                  <label>Territory</label>
+                  <input
+                    type="text"
+                    name="territory"
+                    placeholder="Enter territory"
+                    value={formData.territory}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* ASSIGNED DEALERS */}
+                {formData.role === "SALES_EXECUTIVE" && (
+                  <div className="add-user-field full">
+                    <label>Assigned Dealers</label>
+
+                    <div className="assigned-dealers-list">
+                      {dealerUsers.length > 0 ? (
+                        dealerUsers.map((dealer) => (
+                          <label
+                            key={dealer._id}
+                            className="assigned-dealer-option"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.assignedDealers.includes(dealer._id)}
+                              onChange={(e) => {
+                                const updatedDealers = e.target.checked
+                                  ? [...formData.assignedDealers, dealer._id]
+                                  : formData.assignedDealers.filter(
+                                    (id) => id !== dealer._id
+                                  );
+
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  assignedDealers: updatedDealers,
+                                }));
+                              }}
+                            />
+
+                            <span>{dealer.name}</span>
+                          </label>
+                        ))
+                      ) : (
+                        <p>No active dealers found.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* EMPLOYEE WORK STATUS */}
+              <div className="add-user-field">
+                <label>Employee Work Status</label>
+
+                <div className="select-wrapper">
+                  <select
+                    name="employeeWorkStatus"
+                    value={formData.employeeWorkStatus}
+                    onChange={handleChange}
+                  >
+                    <option value="WORKING">Working</option>
+                    <option value="ON_LEAVE">On Leave</option>
+                    <option value="EXITED">Exited</option>
+                  </select>
+
+                  <ChevronDown size={18} />
+                </div>
+              </div>
+            </section>
+          </div>
+        </form>
+      );
+    }
+
+    if (activeTab === "Other Details") {
+      return (
+        <form
+          id="add-user-form"
+          onSubmit={handleSaveUser}
+          className="add-user-form"
+        >
+          <div className="add-user-grid">
+            <section className="add-user-card">
+              <div className="add-user-card-header">
+                <div className="add-user-card-icon">
+                  <FileText size={22} />
+                </div>
+                <h2>Other Details</h2>
+              </div>
+
+              <div className="add-user-fields">
+                {/* LANGUAGE */}
+                <div className="add-user-field">
+                  <label>Preferred Language</label>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="language"
+                      value={formData.language}
+                      onChange={handleChange}
+                    >
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                      <option value="Marathi">Marathi</option>
+                    </select>
+
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+
+                {/* NOTIFICATION SETTINGS */}
+                <div className="add-user-field full">
+                  <label>Notification Settings</label>
+
+                  <div className="notification-settings">
+                    <label className="notification-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.notifications.email}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            notifications: {
+                              ...prev.notifications,
+                              email: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      <span>Email Notifications</span>
+                    </label>
+
+                    <label className="notification-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.notifications.push}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            notifications: {
+                              ...prev.notifications,
+                              push: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      <span>Push Notifications</span>
+                    </label>
+
+                    <label className="notification-option">
+                      <input
+                        type="checkbox"
+                        checked={formData.notifications.sms}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            notifications: {
+                              ...prev.notifications,
+                              sms: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      <span>SMS Notifications</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* DEALER APPROVAL STATUS */}
+                {formData.role === "DEALER" && (
+                  <div className="add-user-field">
+                    <label>Dealer Approval Status</label>
+
+                    <div className="select-wrapper">
+                      <select
+                        name="dealerApprovalStatus"
+                        value={formData.dealerApprovalStatus}
+                        onChange={handleChange}
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                        <option value="ON_HOLD">On Hold</option>
+                      </select>
+
+                      <ChevronDown size={18} />
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </section>
+            {/* ACCOUNT DETAILS */}
+            <section className="add-user-card">
+              <div className="add-user-card-header">
+                <div className="add-user-card-icon">
+                  <UserRound size={22} />
+                </div>
+
+                <h2>Account Details</h2>
+              </div>
+
+              <div className="add-user-fields">
+                {/* LOGIN TYPE */}
+                <div className="add-user-field">
+                  <label>Login Type</label>
+
+                  <div className="select-wrapper">
+                    <select
+                      name="loginType"
+                      value={formData.loginType}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select login type</option>
+
+                      {loginTypeOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+
+                {/* STATUS */}
+                <div className="add-user-field">
+                  <label>Status</label>
+
+                  <div className="status-switch-row">
+                    <button
+                      type="button"
+                      className={
+                        formData.status === "ACTIVE"
+                          ? "status-switch active"
+                          : "status-switch"
+                      }
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status:
+                            prev.status === "ACTIVE"
+                              ? "INACTIVE"
+                              : "ACTIVE",
+                        }))
+                      }
+                    >
+                      <span />
+                    </button>
+
+                    <span>
+                      {formData.status === "ACTIVE" ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* PASSWORD */}
+                <div className="add-user-field">
+                  <label>
+                    Password {!isEditMode && <span>*</span>}
+                  </label>
+
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder={
+                        isEditMode
+                          ? "Leave blank to keep current password"
+                          : "Enter password"
+                      }
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* CONFIRM PASSWORD */}
+                <div className="add-user-field">
+                  <label>
+                    Confirm Password {!isEditMode && <span>*</span>}
+                  </label>
+
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder={
+                        isEditMode
+                          ? "Leave blank to keep current password"
+                          : "Confirm password"
+                      }
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword((prev) => !prev)
+                      }
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* USER DETAILS SUMMARY */}
+            <section className="add-user-card summary-card">
+              <div className="add-user-card-header">
+                <div className="add-user-card-icon">
+                  <UserRound size={22} />
+                </div>
+
+                <h2>User Details Summary</h2>
+              </div>
+
+              <div className="summary-list">
+                <div>
+                  <strong>Created On</strong>
+                  <span>{formatDate(userSummary.createdAt)}</span>
+                </div>
+
+                <div>
+                  <strong>Created By</strong>
+                  <span>-</span>
+                </div>
+
+                <div>
+                  <strong>Last Updated On</strong>
+                  <span>{formatDate(userSummary.updatedAt)}</span>
+                </div>
+
+                <div>
+                  <strong>Last Updated By</strong>
+                  <span>-</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </form>
+      );
+    }
+
+    if (activeTab === "Permissions") {
+      return (
+        <form
+          id="add-user-form"
+          onSubmit={handleSaveUser}
+          className="add-user-form"
+        >
+          <div className="add-user-grid">
+            <section className="add-user-card">
+              <div className="add-user-card-header">
+                <div className="add-user-card-icon">
+                  <ShieldCheck size={22} />
+                </div>
+                <h2>Permissions</h2>
+              </div>
+
+              <div className="add-user-fields">
+                <div className="add-user-field full">
+                  <div className="permissions-grid">
+                    {permissionList.map((permission) => (
+                      <label
+                        key={permission}
+                        className="permission-item"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.permissions.includes(permission)}
+                          onChange={() => togglePermission(permission)}
+                        />
+
+                        <span className="custom-checkbox">✓</span>
+                        <span>{permission}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </form>
+      );
+    }
+
     return (
       <div className="add-user-empty-state">
         <FileText size={48} />
-
         <h3>No data found</h3>
-
-        <p>
-          This section is currently not available.
-        </p>
+        <p>This section is currently not available.</p>
       </div>
     );
   };
@@ -1353,453 +1944,6 @@ const AddUser = () => {
 
           </div>
 
-          {/* ======================================
-              ROLE + ACCOUNT
-          ====================================== */}
-
-          <div className="add-user-grid">
-
-            {/* ROLE */}
-
-            <section className="add-user-card">
-
-              <div className="add-user-card-header">
-
-                <div className="add-user-card-icon">
-                  <UsersRound size={22} />
-                </div>
-
-                <h2>
-                  Role & Reporting
-                </h2>
-
-              </div>
-
-              <div className="add-user-fields">
-
-                {/* ROLE */}
-
-                <div className="add-user-field full">
-
-                  <label>
-                    User Role{" "}
-                    <span>*</span>
-                  </label>
-
-                  <div className="select-wrapper">
-
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                    >
-
-                      <option value="">
-                        Select role
-                      </option>
-
-                      {roleOptions.map(
-                        (item) => (
-                          <option
-                            key={item}
-                            value={item}
-                          >
-                            {item}
-                          </option>
-                        )
-                      )}
-
-                    </select>
-
-                    <ChevronDown
-                      size={18}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* REPORTING */}
-
-                <div className="add-user-field full">
-                  <label>Reporting To</label>
-
-                  <div className="select-wrapper">
-                    <select
-                      name="reportingTo"
-                      value={formData.reportingTo}
-                      onChange={handleChange}
-                    >
-                      <option value="">
-                        Select reporting manager
-                      </option>
-
-                      {reportingUsers.map((user) => (
-                        <option key={user._id} value={user._id}>
-                          {user.name} (
-                          {user.role.replaceAll("_", " ")}
-                          )
-                        </option>
-                      ))}
-                    </select>
-
-                    <ChevronDown size={18} />
-                  </div>
-                </div>
-
-                {/* DEPARTMENT */}
-
-                <div className="add-user-field full">
-
-                  <label>
-                    Department
-                  </label>
-
-                  <div className="select-wrapper">
-
-                    <select
-                      name="department"
-                      value={
-                        formData.department
-                      }
-                      onChange={handleChange}
-                    >
-
-                      <option value="">
-                        Select department
-                      </option>
-
-                      {departmentOptions.map(
-                        (item) => (
-                          <option
-                            key={item}
-                            value={item}
-                          >
-                            {item}
-                          </option>
-                        )
-                      )}
-
-                    </select>
-
-                    <ChevronDown
-                      size={18}
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </section>
-
-            {/* ACCOUNT DETAILS */}
-
-            <section className="add-user-card">
-
-              <div className="add-user-card-header">
-
-                <div className="add-user-card-icon">
-                  <UserRound size={22} />
-                </div>
-
-                <h2>
-                  Account Details
-                </h2>
-
-              </div>
-
-              <div className="add-user-fields">
-
-                {/* LOGIN TYPE */}
-
-                <div className="add-user-field">
-
-                  <label>
-                    Login Type
-                  </label>
-
-                  <div className="select-wrapper">
-
-                    <select
-                      name="loginType"
-                      value={
-                        formData.loginType
-                      }
-                      onChange={handleChange}
-                    >
-
-                      <option value="">
-                        Select login type
-                      </option>
-
-                      {loginTypeOptions.map(
-                        (item) => (
-                          <option
-                            key={item}
-                            value={item}
-                          >
-                            {item}
-                          </option>
-                        )
-                      )}
-
-                    </select>
-
-                    <ChevronDown
-                      size={18}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* STATUS */}
-
-                <div className="add-user-field">
-
-                  <label>
-                    Status
-                  </label>
-
-                  <div className="status-switch-row">
-
-                    <button
-                      type="button"
-                      className={
-                        formData.status ===
-                          "ACTIVE"
-                          ? "status-switch active"
-                          : "status-switch"
-                      }
-                      onClick={() =>
-                        setFormData(
-                          (prev) => ({
-                            ...prev,
-
-                            status:
-                              prev.status ===
-                                "ACTIVE"
-                                ? "INACTIVE"
-                                : "ACTIVE",
-                          })
-                        )
-                      }
-                    >
-
-                      <span />
-
-                    </button>
-
-                    <span>
-                      {formData.status ===
-                        "ACTIVE"
-                        ? "Active"
-                        : "Inactive"}
-                    </span>
-
-                  </div>
-
-                </div>
-
-                {/* PASSWORD */}
-
-                <div className="add-user-field">
-
-                  <label>
-                    Password{" "}
-                    {!isEditMode && (
-                      <span>*</span>
-                    )}
-                  </label>
-
-                  <div className="password-input">
-
-                    <input
-                      type={
-                        showPassword
-                          ? "text"
-                          : "password"
-                      }
-                      name="password"
-                      placeholder={
-                        isEditMode
-                          ? "Leave blank to keep current password"
-                          : "Enter password"
-                      }
-                      value={
-                        formData.password
-                      }
-                      onChange={handleChange}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPassword(
-                          (prev) =>
-                            !prev
-                        )
-                      }
-                    >
-
-                      {showPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-                {/* CONFIRM PASSWORD */}
-
-                <div className="add-user-field">
-
-                  <label>
-                    Confirm Password{" "}
-                    {!isEditMode && (
-                      <span>*</span>
-                    )}
-                  </label>
-
-                  <div className="password-input">
-
-                    <input
-                      type={
-                        showConfirmPassword
-                          ? "text"
-                          : "password"
-                      }
-                      name="confirmPassword"
-                      placeholder={
-                        isEditMode
-                          ? "Leave blank to keep current password"
-                          : "Confirm password"
-                      }
-                      value={
-                        formData.confirmPassword
-                      }
-                      onChange={handleChange}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(
-                          (prev) =>
-                            !prev
-                        )
-                      }
-                    >
-
-                      {showConfirmPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </section>
-
-          </div>
-
-          {/* ======================================
-              PERMISSIONS
-          ====================================== */}
-
-          <section className="add-user-card permissions-card">
-
-            <div className="add-user-card-header permissions-header">
-
-              <div className="add-user-card-icon">
-                <LockKeyhole size={22} />
-              </div>
-
-              <h2>
-                Permissions
-              </h2>
-
-              <div className="permission-actions">
-
-                <button
-                  type="button"
-                  onClick={
-                    selectAllPermissions
-                  }
-                >
-                  Select All
-                </button>
-
-                <span>|</span>
-
-                <button
-                  type="button"
-                  onClick={
-                    clearAllPermissions
-                  }
-                >
-                  Clear All
-                </button>
-
-              </div>
-
-            </div>
-
-            <div className="permissions-grid">
-
-              {permissionList.map(
-                (permission) => (
-
-                  <label
-                    key={permission}
-                    className="permission-item"
-                  >
-
-                    <input
-                      type="checkbox"
-                      checked={formData.permissions.includes(
-                        permission
-                      )}
-                      onChange={() =>
-                        togglePermission(
-                          permission
-                        )
-                      }
-                    />
-
-                    <span className="custom-checkbox">
-                      ✓
-                    </span>
-
-                    <span>
-                      {permission}
-                    </span>
-
-                  </label>
-
-                )
-              )}
-
-            </div>
-
-          </section>
-
-          {/* ======================================
-              NOTES + SUMMARY
-          ====================================== */}
-
           <div className="add-user-bottom-grid">
 
             {/* NOTES */}
@@ -1835,81 +1979,6 @@ const AddUser = () => {
               </div>
 
             </section>
-
-            {/* SUMMARY */}
-
-            <section className="add-user-card summary-card">
-
-              <div className="add-user-card-header">
-
-                <div className="add-user-card-icon">
-                  <UserRound size={22} />
-                </div>
-
-                <h2>
-                  User Details Summary
-                </h2>
-
-              </div>
-
-              <div className="summary-list">
-
-                <div>
-
-                  <strong>
-                    Created On
-                  </strong>
-
-                  <span>
-                    {formatDate(
-                      userSummary.createdAt
-                    )}
-                  </span>
-
-                </div>
-
-                <div>
-
-                  <strong>
-                    Created By
-                  </strong>
-
-                  <span>
-                    -
-                  </span>
-
-                </div>
-
-                <div>
-
-                  <strong>
-                    Last Updated On
-                  </strong>
-
-                  <span>
-                    {formatDate(
-                      userSummary.updatedAt
-                    )}
-                  </span>
-
-                </div>
-
-                <div>
-
-                  <strong>
-                    Last Updated By
-                  </strong>
-
-                  <span>
-                    -
-                  </span>
-
-                </div>
-
-              </div>
-
-            </section>
-
           </div>
 
         </form>
