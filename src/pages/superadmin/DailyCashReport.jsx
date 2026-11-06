@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import "../../css/superadmin/dailyCashReport.css";
 import {
     Printer, ReceiptText, Wallet, TrendingDown, ArrowLeftRight,
-    PiggyBank, Trash2, CalendarDays, CheckCircle2, XCircle,
+    PiggyBank, Trash2, CalendarDays, CheckCircle2, XCircle, FileDown,
 } from "lucide-react";
 
 const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/daily-cash-reports";
@@ -301,6 +303,260 @@ export default function DailyCashReport() {
             alert(error.response?.data?.message || "Failed to save daily cash report.");
         } finally { setLoading(false); }
     };
+    const downloadDailyCashReportPDF = () => {
+        let pdfWindow = null;
+        try {
+            const hasFormData = Boolean(
+                form.branch ||
+                form.storeName ||
+                form.cashierName ||
+                form.receipts.length ||
+                form.expenses.length ||
+                form.purchaseBills.length
+            );
+
+            const data = hasFormData ? form : report;
+
+            if (!data) {
+                alert("No Daily Cash Report data available to download.");
+                return;
+            }
+
+            pdfWindow = window.open("", "_blank");
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            const formatMoney = (value) =>
+                `Rs. ${Number(value || 0).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}`;
+
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("DAILY CASH REPORT", pageWidth / 2, 18, {
+                align: "center",
+            });
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(
+                `Generated: ${new Date().toLocaleString("en-IN")}`,
+                pageWidth / 2,
+                25,
+                { align: "center" }
+            );
+
+            let y = 34;
+
+            const addTable = (title, headers, rows) => {
+                if (!rows.length) return;
+
+                if (y > 245) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text(title, 14, y);
+                y += 4;
+
+                autoTable(doc, {
+                    startY: y,
+                    head: [headers],
+                    body: rows,
+                    theme: "grid",
+                    margin: { left: 14, right: 14 },
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 3,
+                        overflow: "linebreak",
+                    },
+                    headStyles: {
+                        fillColor: [39, 52, 95],
+                    },
+                });
+
+                y = doc.lastAutoTable.finalY + 10;
+            };
+
+            addTable("Store Information", ["Field", "Details"], [
+                ["Report Date", data.reportDate || "-"],
+                ["Report Time", data.reportTime || "-"],
+                ["Shift", data.shift || "-"],
+                ["Branch", data.branch || "-"],
+                ["Store Name", data.storeName || "-"],
+                ["Cashier Name", data.cashierName || "-"],
+                ["Report Status", data.status || "Not Submitted"],
+                ["Opening Balance Status", data.openingBalanceStatus || "-"],
+            ]);
+
+            addTable(
+                "Collections / Receipts",
+                ["Classification", "Customer", "Receipt No.", "Invoice No.", "Mode", "Amount"],
+                (data.receipts || []).map((item) => [
+                    item.classification,
+                    item.customerName,
+                    item.receiptNo,
+                    item.invoiceNo,
+                    item.paymentMode,
+                    formatMoney(item.amount),
+                ])
+            );
+
+            if (!data.receipts?.length && data.collections) {
+                addTable("Collection Summary", ["Payment Mode", "Amount"], [
+                    ["Cash", formatMoney(data.collections.cash)],
+                    ["UPI", formatMoney(data.collections.upi)],
+                    ["Card", formatMoney(data.collections.card)],
+                    ["Net Banking", formatMoney(data.collections.netBanking)],
+                    ["Other", formatMoney(data.collections.other)],
+                ]);
+            }
+
+            addTable(
+                "Expenses",
+                ["Expense Head", "Payee", "Mode", "Amount", "Bill Attachment"],
+                (data.expenses || []).map((item) => [
+                    item.expenseHead,
+                    item.payee,
+                    item.paymentMode,
+                    formatMoney(item.amount),
+                    item.billAttachment || "-",
+                ])
+            );
+
+            addTable(
+                "Advance Salary",
+                ["Employee", "Payment Mode", "Amount", "Reason"],
+                (data.advanceSalary || []).map((item) => [
+                    item.employeeName,
+                    item.paymentMode,
+                    formatMoney(item.amount),
+                    item.reason,
+                ])
+            );
+
+            addTable(
+                "Cash Transfers In",
+                ["Received From", "Reference No.", "Amount"],
+                (data.cashTransfersIn || []).map((item) => [
+                    item.from,
+                    item.referenceNo,
+                    formatMoney(item.amount),
+                ])
+            );
+
+            addTable(
+                "Cash Transfers Out",
+                ["Transferred To", "Reference No.", "Amount"],
+                (data.cashTransfersOut || []).map((item) => [
+                    item.to,
+                    item.referenceNo,
+                    formatMoney(item.amount),
+                ])
+            );
+
+            addTable(
+                "Purchase Bills",
+                ["Vendor", "Bill No.", "Status", "Payment Mode", "Amount", "Attachment"],
+                (data.purchaseBills || []).map((item) => [
+                    item.vendorName,
+                    item.billNo,
+                    item.paymentStatus,
+                    item.paymentMode,
+                    formatMoney(item.amount),
+                    item.attachment || "-",
+                ])
+            );
+
+            addTable(
+                "Sales Returns",
+                ["Return No.", "Invoice No.", "Customer", "Refund Mode", "Amount"],
+                (data.salesReturns || []).map((item) => [
+                    item.returnNo,
+                    item.invoiceNo,
+                    item.customerName,
+                    item.refundMode,
+                    formatMoney(item.amount),
+                ])
+            );
+
+            const closingAmount = data.closingBalance ?? totals.closing;
+
+            addTable("Cash & Digital Summary", ["Description", "Amount"], [
+                ["Opening Cash", formatMoney(data.openingCashBalance)],
+                ["Cash Receipts", formatMoney(data.totalCashReceipts ?? totals.cashReceipts)],
+                ["Digital Receipts", formatMoney(data.totalDigitalReceipts)],
+                ["Cash Expenses", formatMoney(data.totalCashExpenses ?? totals.expensesCash)],
+                ["Cash Advance Salary", formatMoney(data.totalCashAdvanceSalary ?? totals.advanceCash)],
+                ["Cash Purchase Payments", formatMoney(data.totalCashPurchasePaid ?? totals.purchaseCash)],
+                ["Cash Transfers In", formatMoney(data.totalCashTransfersIn ?? totals.transfersIn)],
+                ["Cash Transfers Out", formatMoney(data.totalCashTransfersOut ?? totals.transfersOut)],
+                ["Cash Sales Returns", formatMoney(data.totalCashSalesReturn ?? totals.returnsCash)],
+                ["Expected Closing Cash", formatMoney(closingAmount)],
+                ["Net Digital Balance", formatMoney(data.digitalSettlement?.netDigitalBalance)],
+            ]);
+
+            addTable(
+                "Supporting Documents",
+                ["File Name", "File URL"],
+                (data.documents || []).map((item) => [
+                    item.fileName,
+                    item.fileUrl,
+                ])
+            );
+
+            if (data.remarks) {
+                if (y > 255) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text("Remarks", 14, y);
+
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "normal");
+
+                const remarksLines = doc.splitTextToSize(
+                    data.remarks,
+                    pageWidth - 28
+                );
+
+                doc.text(remarksLines, 14, y + 7);
+            }
+
+            const fileDate = String(data.reportDate || "report").slice(0, 10);
+            const fileName = `Daily-Cash-Report-${fileDate}.pdf`;
+
+            // Generate PDF Blob
+            const pdfBlob = doc.output("blob");
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+
+            // Open PDF in a new browser tab
+            if (pdfWindow) {
+                pdfWindow.location.href = pdfUrl;
+            }
+
+            // Download PDF directly
+            doc.save(fileName);
+
+            alert("PDF downloaded successfully!");
+
+            // Release temporary PDF URL
+            setTimeout(() => {
+                URL.revokeObjectURL(pdfUrl);
+            }, 60000);
+        } catch (error) {
+            pdfWindow?.close();
+            console.error("PDF download error:", error);
+            alert("Failed to generate PDF. Please try again.");
+        }
+    };
 
     const runApproval = async (path, successMessage, needsReason = false) => {
         if (!report?._id) return;
@@ -341,7 +597,14 @@ export default function DailyCashReport() {
             >
                 {loading ? "Saving..." : "Submit Report"}
             </button>
-            <button type="button" className="daily-btn icon-btn" onClick={() => window.print()}><Printer size={15} /> Print</button>
+            <button
+                type="button"
+                className="daily-btn icon-btn"
+                onClick={downloadDailyCashReportPDF}
+            >
+                <FileDown size={15} />
+                Download PDF
+            </button>
         </div></div>
 
         <section className="daily-card stats-row">

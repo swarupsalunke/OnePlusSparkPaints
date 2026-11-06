@@ -96,7 +96,8 @@
   color: #44506a;
   background: #fff;
   border: 1px solid #dce2eb;
-  width: 85px;
+  width: auto;
+  min-width: 115px;
 }
 
 /* COMMON CARDS */
