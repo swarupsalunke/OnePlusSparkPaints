@@ -141,6 +141,83 @@ export default function DailyCashReport() {
 
         return data.file;
     };
+
+    const handleExpenseBillUpload = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+
+        try {
+            setUploadingFiles((prev) => ({ ...prev, expense: true }));
+
+            const uploaded = await uploadReportFile(file, "expense-bill");
+
+            setExpense((prev) => ({
+                ...prev,
+                billAttachment: uploaded.fileUrl,
+            }));
+
+            alert("Expense bill uploaded successfully.");
+        } catch (error) {
+            alert(error.response?.data?.message || error.message);
+        } finally {
+            setUploadingFiles((prev) => ({ ...prev, expense: false }));
+        }
+    };
+
+    const handlePurchaseBillUpload = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+
+        try {
+            setUploadingFiles((prev) => ({ ...prev, purchase: true }));
+
+            const uploaded = await uploadReportFile(file, "purchase-bill");
+
+            setPurchase((prev) => ({
+                ...prev,
+                attachment: uploaded.fileUrl,
+            }));
+
+            alert("Purchase bill uploaded successfully.");
+        } catch (error) {
+            alert(error.response?.data?.message || error.message);
+        } finally {
+            setUploadingFiles((prev) => ({ ...prev, purchase: false }));
+        }
+    };
+
+    const handleSupportingDocumentUpload = async (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = "";
+        if (!files.length) return;
+
+        try {
+            setUploadingFiles((prev) => ({ ...prev, supporting: true }));
+
+            for (const file of files) {
+                const uploaded = await uploadReportFile(file, "supporting-document");
+
+                setForm((prev) => ({
+                    ...prev,
+                    documents: [
+                        ...prev.documents,
+                        {
+                            fileName: uploaded.fileName,
+                            fileUrl: uploaded.fileUrl,
+                        },
+                    ],
+                }));
+            }
+
+            alert("Supporting documents uploaded successfully.");
+        } catch (error) {
+            alert(error.response?.data?.message || error.message);
+        } finally {
+            setUploadingFiles((prev) => ({ ...prev, supporting: false }));
+        }
+    };
     const today = new Date().toLocaleDateString("en-CA");
 
     const loadReports = async () => {
