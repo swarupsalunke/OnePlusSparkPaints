@@ -12,7 +12,7 @@ const money = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN", { min
 const emptyForm = () => ({
     reportDate: new Date().toISOString().slice(0, 10), reportTime: "", shift: "", branch: "", storeName: "", cashierName: "",
     openingCashBalance: "", collections: { cash: "", upi: "", card: "", netBanking: "", other: "" },
-    receipts: [], creditBills: [], expenses: [], advanceSalary: [], cashTransfersIn: [], cashTransfersOut: [], purchaseBills: [], salesReturns: [], remarks: "",
+    receipts: [], creditBills: [], expenses: [], advanceSalary: [], cashTransfersIn: [], cashTransfersOut: [], purchaseBills: [], salesReturns: [], documents: [], remarks: "",
 });
 const emptyReceipt = () => ({ classification: "TODAY'S SALE", customerName: "", receiptNo: "", referenceNo: "", invoiceNo: "", amount: "", paymentMode: "CASH", destinationAccount: "", remarks: "" });
 
@@ -23,6 +23,11 @@ export default function DailyCashReport() {
     const [recentReports, setRecentReports] = useState([]);
     const [summaryLoading, setSummaryLoading] = useState(true);
     const [user, setUser] = useState({});
+    const [uploadingFiles, setUploadingFiles] = useState({
+        expense: false,
+        purchase: false,
+        supporting: false,
+    });
     const [receipt, setReceipt] = useState(emptyReceipt());
     const [creditBill, setCreditBill] = useState({ customerName: "", invoiceNo: "", amount: "" });
     const [expense, setExpense] = useState({ expenseHead: "", payee: "", amount: "", paymentMode: "CASH", paymentAccount: "", billAttachment: "", remarks: "" });
@@ -35,6 +40,107 @@ export default function DailyCashReport() {
     const token = () => localStorage.getItem("token");
     const isApprover = ["SUPER_ADMIN", "DIRECTOR"].includes(user.role);
     const headers = { Authorization: `Bearer ${token()}` };
+    const uploadReportFile = async (file, category) => {
+        const formData = new FormData();
+
+        formData.append("file", file);
+        formData.append("category", category);
+
+        const { data } = await axios.post(
+            `${API_URL}/upload`,
+            formData,
+            { headers }
+        );
+
+        const handleExpenseBillUpload = async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+
+            if (!file) return;
+
+            try {
+                setUploadingFiles((prev) => ({ ...prev, expense: true }));
+
+                const uploaded = await uploadReportFile(file, "expense-bill");
+
+                setExpense((prev) => ({
+                    ...prev,
+                    billAttachment: uploaded.fileUrl,
+                }));
+
+                alert("Expense bill uploaded successfully.");
+            } catch (error) {
+                alert(error.response?.data?.message || error.message);
+            } finally {
+                setUploadingFiles((prev) => ({ ...prev, expense: false }));
+            }
+        };
+
+        const handlePurchaseBillUpload = async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+
+            if (!file) return;
+
+            try {
+                setUploadingFiles((prev) => ({ ...prev, purchase: true }));
+
+                const uploaded = await uploadReportFile(file, "purchase-bill");
+
+                setPurchase((prev) => ({
+                    ...prev,
+                    attachment: uploaded.fileUrl,
+                }));
+
+                alert("Purchase bill uploaded successfully.");
+            } catch (error) {
+                alert(error.response?.data?.message || error.message);
+            } finally {
+                setUploadingFiles((prev) => ({ ...prev, purchase: false }));
+            }
+        };
+
+        const handleSupportingDocumentUpload = async (e) => {
+            const files = Array.from(e.target.files || []);
+            e.target.value = "";
+
+            if (!files.length) return;
+
+            try {
+                setUploadingFiles((prev) => ({ ...prev, supporting: true }));
+
+                for (const file of files) {
+                    const uploaded = await uploadReportFile(
+                        file,
+                        "supporting-document"
+                    );
+
+                    setForm((prev) => ({
+                        ...prev,
+                        documents: [
+                            ...prev.documents,
+                            {
+                                fileName: uploaded.fileName,
+                                fileUrl: uploaded.fileUrl,
+                            },
+                        ],
+                    }));
+                }
+
+                alert("Supporting documents uploaded successfully.");
+            } catch (error) {
+                alert(error.response?.data?.message || error.message);
+            } finally {
+                setUploadingFiles((prev) => ({ ...prev, supporting: false }));
+            }
+        };
+
+        if (!data?.success || !data?.file?.fileUrl) {
+            throw new Error(data?.message || "File upload failed");
+        }
+
+        return data.file;
+    };
     const today = new Date().toLocaleDateString("en-CA");
 
     const loadReports = async () => {
@@ -96,6 +202,14 @@ export default function DailyCashReport() {
 
     const submitReport = async (event, status = "SUBMITTED") => {
         event?.preventDefault();
+        if (
+            uploadingFiles.expense ||
+            uploadingFiles.purchase ||
+            uploadingFiles.supporting
+        ) {
+            alert("Please wait until all documents finish uploading.");
+            return;
+        }
         if (!form.reportDate || !form.branch || !form.storeName || !form.cashierName) { alert("Please fill Report Date, Branch, Store Name and Cashier Name."); return; }
         try {
             setLoading(true);
@@ -134,8 +248,22 @@ export default function DailyCashReport() {
 
     return <div className="daily-cash-page">
         <div className="daily-cash-header"><div><h1>Daily Cash Report</h1><p>Create and submit the daily cash report</p></div><div className="daily-cash-actions">
-            <button type="button" className="daily-btn secondary" disabled={loading} onClick={(e) => submitReport(e, "DRAFT")}>Save Draft</button>
-            <button type="submit" form="daily-cash-form" className="daily-btn primary" disabled={loading}>{loading ? "Saving..." : "Submit Report"}</button>
+            <button
+                type="button"
+                className="daily-btn secondary"
+                disabled={loading || Object.values(uploadingFiles).some(Boolean)}
+                onClick={(e) => submitReport(e, "DRAFT")}
+            >
+                Save Draft
+            </button>
+            <button
+                type="submit"
+                form="daily-cash-form"
+                className="daily-btn primary"
+                disabled={loading || Object.values(uploadingFiles).some(Boolean)}
+            >
+                {loading ? "Saving..." : "Submit Report"}
+            </button>
             <button type="button" className="daily-btn icon-btn" onClick={() => window.print()}><Printer size={15} /> Print</button>
         </div></div>
 
@@ -184,7 +312,21 @@ export default function DailyCashReport() {
                 </>)}
 
                 {section("Expenses", "Cash and digital expenses are classified separately", <>
-                    <div className="daily-form-grid">{field("Expense Head", "expenseHead", expense.expenseHead, (e) => setExpense({ ...expense, expenseHead: e.target.value }))}{field("Payee", "payee", expense.payee, (e) => setExpense({ ...expense, payee: e.target.value }))}{field("Amount", "amount", expense.amount, (e) => setExpense({ ...expense, amount: e.target.value }), "number")}{selectField("Payment Mode", expense.paymentMode, (e) => setExpense({ ...expense, paymentMode: e.target.value }), PAYMENT_MODES.map((v) => ({ value: v, label: v.replaceAll("_", " ") })))}{field("Payment Account", "paymentAccount", expense.paymentAccount, (e) => setExpense({ ...expense, paymentAccount: e.target.value }))}{field("Bill Attachment Name", "billAttachment", expense.billAttachment, (e) => setExpense({ ...expense, billAttachment: e.target.value }))}{field("Remarks", "remarks", expense.remarks, (e) => setExpense({ ...expense, remarks: e.target.value }))}</div>
+                    <div className="daily-form-grid">{field("Expense Head", "expenseHead", expense.expenseHead, (e) => setExpense({ ...expense, expenseHead: e.target.value }))}{field("Payee", "payee", expense.payee, (e) => setExpense({ ...expense, payee: e.target.value }))}{field("Amount", "amount", expense.amount, (e) => setExpense({ ...expense, amount: e.target.value }), "number")}{selectField("Payment Mode", expense.paymentMode, (e) => setExpense({ ...expense, paymentMode: e.target.value }), PAYMENT_MODES.map((v) => ({ value: v, label: v.replaceAll("_", " ") })))}{field("Payment Account", "paymentAccount", expense.paymentAccount, (e) => setExpense({ ...expense, paymentAccount: e.target.value }))}<label className="daily-field">
+                        <span>Expense Bill Attachment</span>
+                        <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            onChange={handleExpenseBillUpload}
+                            disabled={uploadingFiles.expense}
+                        />
+                        {uploadingFiles.expense && <small>Uploading...</small>}
+                        {expense.billAttachment && (
+                            <a href={expense.billAttachment} target="_blank" rel="noreferrer">
+                                View Uploaded Bill
+                            </a>
+                        )}
+                    </label>{field("Remarks", "remarks", expense.remarks, (e) => setExpense({ ...expense, remarks: e.target.value }))}</div>
                     <button type="button" className="daily-add-btn" onClick={() => addItem("expenses", expense, setExpense, () => ({ expenseHead: "", payee: "", amount: "", paymentMode: "CASH", paymentAccount: "", billAttachment: "", remarks: "" }))}>+ Add Expense</button>
                     {listRows("expenses", form.expenses, (item) => <span>{item.expenseHead} · {item.payee} · {item.paymentMode} · {money(item.amount)}</span>)}
                 </>)}
@@ -209,7 +351,21 @@ export default function DailyCashReport() {
                 </div>
 
                 {section("Purchase Bills", "Select whether each purchase is cash paid, credit or partial", <>
-                    <div className="daily-form-grid">{field("Vendor Name", "vendorName", purchase.vendorName, (e) => setPurchase({ ...purchase, vendorName: e.target.value }))}{field("Bill No.", "billNo", purchase.billNo, (e) => setPurchase({ ...purchase, billNo: e.target.value }))}{field("Bill Amount", "amount", purchase.amount, (e) => setPurchase({ ...purchase, amount: e.target.value }), "number")}{selectField("Payment Status", purchase.paymentStatus, (e) => setPurchase({ ...purchase, paymentStatus: e.target.value }), [{ value: "CASH_PAID", label: "Cash Paid" }, { value: "CREDIT", label: "Credit" }, { value: "PARTIAL", label: "Partial" }])}{field("Paid Amount", "paidAmount", purchase.paidAmount, (e) => setPurchase({ ...purchase, paidAmount: e.target.value },), "number")}{selectField("Payment Mode", purchase.paymentMode, (e) => setPurchase({ ...purchase, paymentMode: e.target.value }), PAYMENT_MODES.map((v) => ({ value: v, label: v.replaceAll("_", " ") })))}{field("Attachment Name", "attachment", purchase.attachment, (e) => setPurchase({ ...purchase, attachment: e.target.value }))}</div>
+                    <div className="daily-form-grid">{field("Vendor Name", "vendorName", purchase.vendorName, (e) => setPurchase({ ...purchase, vendorName: e.target.value }))}{field("Bill No.", "billNo", purchase.billNo, (e) => setPurchase({ ...purchase, billNo: e.target.value }))}{field("Bill Amount", "amount", purchase.amount, (e) => setPurchase({ ...purchase, amount: e.target.value }), "number")}{selectField("Payment Status", purchase.paymentStatus, (e) => setPurchase({ ...purchase, paymentStatus: e.target.value }), [{ value: "CASH_PAID", label: "Cash Paid" }, { value: "CREDIT", label: "Credit" }, { value: "PARTIAL", label: "Partial" }])}{field("Paid Amount", "paidAmount", purchase.paidAmount, (e) => setPurchase({ ...purchase, paidAmount: e.target.value },), "number")}{selectField("Payment Mode", purchase.paymentMode, (e) => setPurchase({ ...purchase, paymentMode: e.target.value }), PAYMENT_MODES.map((v) => ({ value: v, label: v.replaceAll("_", " ") })))}<label className="daily-field">
+                        <span>Purchase Bill Attachment</span>
+                        <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            onChange={handlePurchaseBillUpload}
+                            disabled={uploadingFiles.purchase}
+                        />
+                        {uploadingFiles.purchase && <small>Uploading...</small>}
+                        {purchase.attachment && (
+                            <a href={purchase.attachment} target="_blank" rel="noreferrer">
+                                View Uploaded Bill
+                            </a>
+                        )}
+                    </label></div>
                     <button type="button" className="daily-add-btn" onClick={() => addItem("purchaseBills", purchase, setPurchase, () => ({ vendorName: "", billNo: "", amount: "", paymentStatus: "CASH_PAID", paidAmount: "", paymentMode: "CASH", attachment: "" }))}>+ Add Purchase Bill</button>
                     {listRows("purchaseBills", form.purchaseBills, (item) => <span>{item.vendorName} · {item.paymentStatus} · Paid {money(item.paidAmount ?? item.amount)}</span>)}
                 </>)}
@@ -225,8 +381,44 @@ export default function DailyCashReport() {
                     <div className="closing-summary-divider" /><div className="closing-summary-row total"><span>Expected Closing Cash</span><strong>{money(totals.closing)}</strong></div>
                 </div>)}
 
+                {section("Supporting Documents", "Upload additional report documents", <>
+                    <div className="daily-form-grid">
+                        <label className="daily-field">
+                            <span>Upload Supporting Documents</span>
+                            <input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                multiple
+                                onChange={handleSupportingDocumentUpload}
+                                disabled={uploadingFiles.supporting}
+                            />
+                            {uploadingFiles.supporting && <small>Uploading...</small>}
+                        </label>
+                    </div>
+
+                    {form.documents.length > 0 && (
+                        <div className="daily-dynamic-list">
+                            {form.documents.map((doc, index) => (
+                                <div className="daily-dynamic-row" key={index}>
+                                    <a href={doc.fileUrl} target="_blank" rel="noreferrer">
+                                        {doc.fileName}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeItem("documents", index)}
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>)}
+
                 {section("Remarks", "Additional information for this report", <textarea className="daily-remarks" value={form.remarks} onChange={(e) => updateForm("remarks", e.target.value)} rows={4} placeholder="Enter remarks..." />)}
-                <div className="daily-bottom-actions"><button type="button" className="daily-btn secondary" onClick={() => setForm(emptyForm())}>Clear Form</button><button type="submit" className="daily-btn primary" disabled={loading}>{loading ? "Submitting..." : "Submit Report"}</button></div>
+
+                {section("Remarks", "Additional information for this report", <textarea className="daily-remarks" value={form.remarks} onChange={(e) => updateForm("remarks", e.target.value)} rows={4} placeholder="Enter remarks..." />)}
+                <div className="daily-bottom-actions"><button type="button" className="daily-btn secondary" onClick={() => setForm(emptyForm())}>Clear Form</button><button type="submit" className="daily-btn primary" disabled={loading || Object.values(uploadingFiles).some(Boolean)}>{loading ? "Submitting..." : "Submit Report"}</button></div>
             </div>
 
                 <aside className="daily-cash-sidebar">
