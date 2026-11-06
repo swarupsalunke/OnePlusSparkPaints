@@ -446,7 +446,7 @@
 
 .summary-item {
     display: grid;
-    grid-template-columns: 9px 1fr auto;
+    grid-template-columns: 35px  auto;
     align-items: center;
     gap: 7px;
     min-height: 25px;
