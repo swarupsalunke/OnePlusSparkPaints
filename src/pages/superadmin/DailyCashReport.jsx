@@ -22,6 +22,8 @@ export default function DailyCashReport() {
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(false);
     const [report, setReport] = useState(null);
+    const [openingBalanceEdit, setOpeningBalanceEdit] = useState("");
+    const [resubmittingOpening, setResubmittingOpening] = useState(false);
     const [recentReports, setRecentReports] = useState([]);
     const [summaryLoading, setSummaryLoading] = useState(true);
     const [user, setUser] = useState({});
@@ -569,6 +571,43 @@ export default function DailyCashReport() {
         } catch (error) { alert(error.response?.data?.message || "Action failed."); }
     };
 
+    const resubmitOpeningBalance = async () => {
+        if (!report?._id) return;
+
+        const openingCashBalance =
+            openingBalanceEdit === ""
+                ? report.openingCashBalance
+                : openingBalanceEdit;
+
+        if (
+            openingCashBalance === "" ||
+            !Number.isFinite(Number(openingCashBalance)) ||
+            Number(openingCashBalance) < 0
+        ) {
+            alert("Please enter a valid opening cash balance.");
+            return;
+        }
+
+        try {
+            setResubmittingOpening(true);
+
+            const { data } = await axios.put(
+                `${API_URL}/${report._id}/opening-balance/resubmit`,
+                { openingCashBalance: Number(openingCashBalance) },
+                { headers }
+            );
+
+            alert(data.message || "Opening balance resubmitted successfully.");
+
+            setOpeningBalanceEdit("");
+            await loadReports();
+        } catch (error) {
+            alert(error.response?.data?.message || "Failed to resubmit opening balance.");
+        } finally {
+            setResubmittingOpening(false);
+        }
+    };
+
     const field = (label, name, value, onChange, type = "text", required = false) => (
         <label className="daily-field" key={name}><span>{label}</span><input type={type} name={name} value={value ?? ""} onChange={onChange} required={required} min={type === "number" ? "0" : undefined} /></label>
     );
@@ -755,7 +794,7 @@ export default function DailyCashReport() {
                     )}
                 </>)}
 
-                {section("Remarks", "Additional information for this report", <textarea className="daily-remarks" value={form.remarks} onChange={(e) => updateForm("remarks", e.target.value)} rows={4} placeholder="Enter remarks..." />)}
+                {/* {section("Remarks", "Additional information for this report", <textarea className="daily-remarks" value={form.remarks} onChange={(e) => updateForm("remarks", e.target.value)} rows={4} placeholder="Enter remarks..." />)} */}
 
                 {section("Remarks", "Additional information for this report", <textarea className="daily-remarks" value={form.remarks} onChange={(e) => updateForm("remarks", e.target.value)} rows={4} placeholder="Enter remarks..." />)}
                 <div className="daily-bottom-actions"><button type="button" className="daily-btn secondary" onClick={() => setForm(emptyForm())}>Clear Form</button><button type="submit" className="daily-btn primary" disabled={loading || Object.values(uploadingFiles).some(Boolean)}>{loading ? "Submitting..." : "Submit Report"}</button></div>
@@ -770,6 +809,39 @@ export default function DailyCashReport() {
                         <div className="summary-item"><span>Digital Receipts</span><strong>{money(report.totalDigitalReceipts)}</strong></div>
                         <div className="summary-item"><span>Cash Expenses</span><strong>{money(report.totalCashExpenses)}</strong></div>
                         <div className="summary-item closing"><span>Closing Cash</span><strong>{money(report.closingBalance)}</strong></div>
+                        {report.openingBalanceSource === "MANUAL" &&
+                            report.openingBalanceStatus === "REJECTED" && (
+                                <div className="daily-rejected-opening">
+                                    <div className="summary-item">
+                                        <span>Rejection Reason</span>
+                                        <strong>
+                                            {report.openingBalanceRejectionReason || "No reason provided"}
+                                        </strong>
+                                    </div>
+
+                                    <label className="daily-field">
+                                        <span>Edit Opening Cash Balance</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={openingBalanceEdit}
+                                            placeholder={String(report.openingCashBalance ?? 0)}
+                                            onChange={(e) => setOpeningBalanceEdit(e.target.value)}
+                                        />
+                                    </label>
+
+                                    <button
+                                        type="button"
+                                        className="daily-btn primary"
+                                        disabled={resubmittingOpening}
+                                        onClick={resubmitOpeningBalance}
+                                    >
+                                        {resubmittingOpening
+                                            ? "Resubmitting..."
+                                            : "Resubmit Opening Balance"}
+                                    </button>
+                                </div>
+                            )}
                         {isApprover && <div className="daily-approval-actions">
                             {report.openingBalanceSource === "MANUAL" && report.openingBalanceStatus === "PENDING" && <><button type="button" onClick={() => runApproval("opening-balance/approve", "Opening balance approved.")}><CheckCircle2 size={14} /> Approve Opening</button><button type="button" className="reject" onClick={() => runApproval("opening-balance/reject", "Opening balance rejected.", true)}><XCircle size={14} /> Reject Opening</button></>}
                             {report.status === "SUBMITTED" && ["APPROVED", "NOT_REQUIRED"].includes(report.openingBalanceStatus) && <><button type="button" onClick={() => runApproval("approve", "Daily cash report approved.")}><CheckCircle2 size={14} /> Approve Report</button><button type="button" className="reject" onClick={() => runApproval("reject", "Daily cash report rejected.", true)}><XCircle size={14} /> Reject Report</button></>}

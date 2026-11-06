@@ -1257,3 +1257,28 @@
     display: none !important;
   }
 }
+
+.daily-rejected-opening {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #f2c6c6;
+    border-radius: 10px;
+    background: #fff8f8;
+}
+
+.daily-rejected-opening .daily-field {
+    width: 100%;
+}
+
+.daily-rejected-opening .daily-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.daily-rejected-opening .summary-item strong {
+    color: #c0392b;
+    overflow-wrap: anywhere;
+}
