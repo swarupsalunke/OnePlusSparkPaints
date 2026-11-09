@@ -1653,43 +1653,43 @@ const LoyaltyTierManagement = () => {
                                         </div>
 
                                         <div className="form-group">
-    <label>Tier Type</label>
+                                            <label>Tier Type</label>
 
-    <div style={{ display: "flex", gap: "8px" }}>
-        <select
-            name="tierType"
-            value={form.tierType}
-            onChange={handleInputChange}
-            style={{ flex: 1 }}
-        >
-            <option value="">Select Tier Type</option>
+                                            <div style={{ display: "flex", gap: "8px" }}>
+                                                <select
+                                                    name="tierType"
+                                                    value={form.tierType}
+                                                    onChange={handleInputChange}
+                                                    style={{ flex: 1 }}
+                                                >
+                                                    <option value="">Select Tier Type</option>
 
-            {form.tierType &&
-                !tierTypes.some(
-                    (type) => type.typeName === form.tierType
-                ) && (
-                    <option value={form.tierType}>
-                        {form.tierType}
-                    </option>
-                )}
+                                                    {form.tierType &&
+                                                        !tierTypes.some(
+                                                            (type) => type.typeName === form.tierType
+                                                        ) && (
+                                                            <option value={form.tierType}>
+                                                                {form.tierType}
+                                                            </option>
+                                                        )}
 
-            {tierTypes.map((type) => (
-                <option key={type._id} value={type.typeName}>
-                    {type.typeName}
-                </option>
-            ))}
-        </select>
+                                                    {tierTypes.map((type) => (
+                                                        <option key={type._id} value={type.typeName}>
+                                                            {type.typeName}
+                                                        </option>
+                                                    ))}
+                                                </select>
 
-        <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleCreateTierType}
-        >
-            <Plus size={16} />
-            Add Type
-        </button>
-    </div>
-</div>
+                                                <button
+                                                    type="button"
+                                                    className="btn-secondary"
+                                                    onClick={handleCreateTierType}
+                                                >
+                                                    <Plus size={16} />
+                                                    Add Type
+                                                </button>
+                                            </div>
+                                        </div>
 
                                         <div className="form-group">
                                             <label>
