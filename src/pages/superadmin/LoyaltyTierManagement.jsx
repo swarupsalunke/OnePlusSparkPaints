@@ -59,12 +59,7 @@ const initialForm = {
 
 const customerTypes = ["DEALER", "PAINTER", "RETAILER"];
 
-const tierTypes = [
-    "STANDARD",
-    "PREMIUM",
-    "VIP",
-    "CUSTOM",
-];
+
 
 const statusOptions = ["ACTIVE", "INACTIVE"];
 
@@ -92,6 +87,8 @@ const LoyaltyTierManagement = () => {
 
     const [editingTier, setEditingTier] = useState(null);
     const [viewingTier, setViewingTier] = useState(null);
+
+    const [tierTypes, setTierTypes] = useState([]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = 10;
@@ -123,6 +120,67 @@ const LoyaltyTierManagement = () => {
     };
 
     // =====================================================
+    // FETCH TIER TYPES
+    // =====================================================
+
+    const fetchTierTypes = async () => {
+        try {
+            const response = await fetch(`${API_URL}/types`);
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch tier types");
+            }
+
+            setTierTypes(data.tierTypes || []);
+        } catch (err) {
+            setError(err.message || "Failed to load tier types");
+        }
+    };
+
+    // =====================================================
+    // CREATE TIER TYPE
+    // =====================================================
+
+    const handleCreateTierType = async () => {
+        const typeName = window.prompt("Enter new Tier Type:");
+
+        if (!typeName || !typeName.trim()) return;
+
+        try {
+            setError("");
+            setSuccess("");
+
+            const response = await fetch(`${API_URL}/types`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    typeName: typeName.trim(),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to create tier type");
+            }
+
+            await fetchTierTypes();
+
+            setForm((prev) => ({
+                ...prev,
+                tierType: data.tierType.typeName,
+            }));
+
+            setSuccess("Tier type created successfully");
+        } catch (err) {
+            setError(err.message || "Failed to create tier type");
+        }
+    };
+
+    // =====================================================
     // FETCH STATS
     // =====================================================
 
@@ -148,6 +206,7 @@ const LoyaltyTierManagement = () => {
     useEffect(() => {
         fetchTiers();
         fetchStats();
+        fetchTierTypes();
     }, []);
 
     // =====================================================
@@ -155,7 +214,11 @@ const LoyaltyTierManagement = () => {
     // =====================================================
 
     const refreshData = async () => {
-        await Promise.all([fetchTiers(), fetchStats()]);
+        await Promise.all([
+            fetchTiers(),
+            fetchStats(),
+            fetchTierTypes(),
+        ]);
     };
 
     // =====================================================
@@ -687,8 +750,8 @@ const LoyaltyTierManagement = () => {
                             <option value="ALL">All Tier Types</option>
 
                             {tierTypes.map((type) => (
-                                <option key={type} value={type}>
-                                    {type}
+                                <option key={type._id} value={type.typeName}>
+                                    {type.typeName}
                                 </option>
                             ))}
                         </select>
@@ -1590,25 +1653,43 @@ const LoyaltyTierManagement = () => {
                                         </div>
 
                                         <div className="form-group">
-                                            <label>
-                                                Tier Type
-                                            </label>
+    <label>Tier Type</label>
 
-                                            <select
-                                                name="tierType"
-                                                value={form.tierType}
-                                                onChange={handleInputChange}
-                                            >
-                                                {tierTypes.map((type) => (
-                                                    <option
-                                                        key={type}
-                                                        value={type}
-                                                    >
-                                                        {type}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+    <div style={{ display: "flex", gap: "8px" }}>
+        <select
+            name="tierType"
+            value={form.tierType}
+            onChange={handleInputChange}
+            style={{ flex: 1 }}
+        >
+            <option value="">Select Tier Type</option>
+
+            {form.tierType &&
+                !tierTypes.some(
+                    (type) => type.typeName === form.tierType
+                ) && (
+                    <option value={form.tierType}>
+                        {form.tierType}
+                    </option>
+                )}
+
+            {tierTypes.map((type) => (
+                <option key={type._id} value={type.typeName}>
+                    {type.typeName}
+                </option>
+            ))}
+        </select>
+
+        <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleCreateTierType}
+        >
+            <Plus size={16} />
+            Add Type
+        </button>
+    </div>
+</div>
 
                                         <div className="form-group">
                                             <label>
