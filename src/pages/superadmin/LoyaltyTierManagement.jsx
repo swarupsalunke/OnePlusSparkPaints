@@ -32,6 +32,12 @@ const API_URL = "https://oneplussparkpaintsserver.onrender.com/api/loyalty-tiers
 const initialForm = {
     tierName: "",
     level: "",
+
+    minPoints: "",
+    maxPoints: "",
+    cashReward: 0,
+    giftReward: "",
+
     tierType: "STANDARD",
     applicableTo: [],
     minPurchase: 0,
@@ -294,6 +300,12 @@ const LoyaltyTierManagement = () => {
         setForm({
             tierName: tier.tierName || "",
             level: tier.level ?? "",
+
+            minPoints: tier.minPoints ?? "",
+            maxPoints: tier.maxPoints ?? "",
+            cashReward: tier.cashReward ?? 0,
+            giftReward: tier.giftReward || "",
+
             tierType: tier.tierType || "STANDARD",
             applicableTo: tier.applicableTo || [],
             minPurchase: tier.minPurchase ?? 0,
@@ -394,6 +406,16 @@ const LoyaltyTierManagement = () => {
             return;
         }
 
+        if (
+            form.minPoints === "" ||
+            form.maxPoints === "" ||
+            Number(form.minPoints) < 0 ||
+            Number(form.maxPoints) < Number(form.minPoints)
+        ) {
+            setError("Please enter a valid points range");
+            return;
+        }
+
         if (form.applicableTo.length === 0) {
             setError("Select at least one applicable customer type");
             return;
@@ -407,6 +429,12 @@ const LoyaltyTierManagement = () => {
             const payload = {
                 tierName: form.tierName.trim(),
                 level: Number(form.level),
+
+                minPoints: Number(form.minPoints),
+                maxPoints: Number(form.maxPoints),
+                cashReward: Number(form.cashReward) || 0,
+                giftReward: form.giftReward.trim() || "-",
+
                 tierType: form.tierType,
                 applicableTo: form.applicableTo,
 
@@ -1712,6 +1740,55 @@ const LoyaltyTierManagement = () => {
                                                     )
                                                 )}
                                             </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Minimum Points *</label>
+                                            <input
+                                                type="number"
+                                                name="minPoints"
+                                                min="0"
+                                                value={form.minPoints}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g. 1001"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Maximum Points *</label>
+                                            <input
+                                                type="number"
+                                                name="maxPoints"
+                                                min="0"
+                                                value={form.maxPoints}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g. 2499"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Cash Reward (₹)</label>
+                                            <input
+                                                type="number"
+                                                name="cashReward"
+                                                min="0"
+                                                value={form.cashReward}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g. 800"
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Gift Reward</label>
+                                            <input
+                                                type="text"
+                                                name="giftReward"
+                                                value={form.giftReward}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g. Watch"
+                                            />
                                         </div>
 
                                     </div>

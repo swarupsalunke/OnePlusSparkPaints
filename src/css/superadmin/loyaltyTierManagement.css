@@ -44,7 +44,7 @@
     margin: 4px 0 0;
 
     color: #718099;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.4;
 }
 
@@ -68,7 +68,7 @@
     gap: 6px;
 
     font-family: inherit;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 
     cursor: pointer;
@@ -175,7 +175,7 @@
     margin-bottom: 3px;
 
     color: #68758b;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
     font-weight: 600;
 }
@@ -226,7 +226,7 @@
 }
 
 .filter-title span {
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 700;
 }
 
@@ -278,7 +278,7 @@
     color: #526079;
 
     font-family: inherit;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .search-box input::placeholder {
@@ -311,7 +311,7 @@
     color: #59667d;
 
     font-family: inherit;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 
     cursor: pointer;
@@ -367,7 +367,7 @@
     margin: 3px 0 0;
 
     color: #8a95a7;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
 }
 
@@ -388,7 +388,7 @@
     gap: 5px;
 
     font-family: inherit;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 
     cursor: pointer;
@@ -427,7 +427,7 @@
 
     color: #5b687e;
 
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1;
     font-weight: 700;
 
@@ -444,7 +444,7 @@
 
     color: #4d5a70;
 
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.3;
 
     vertical-align: middle;
@@ -505,7 +505,7 @@
     display: block;
 
     color: #24365c;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
     font-weight: 700;
 }
@@ -588,7 +588,7 @@
 
     padding: 5px 8px;
 
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 /* =========================================================
@@ -612,7 +612,7 @@
     justify-content: center;
     gap: 3px;
 
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 }
 
@@ -726,7 +726,7 @@
     gap: 8px;
 
     color: #778398;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .loading-icon {
@@ -758,7 +758,7 @@
     margin: 0 0 12px;
 
     color: #8b95a7;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 /* =========================================================
@@ -836,7 +836,7 @@
 
     color: #53617a;
 
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.25;
 
     text-align: center;
@@ -971,7 +971,7 @@
     align-items: center;
     justify-content: center;
 
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 700;
 }
 
@@ -993,7 +993,7 @@
     margin-bottom: 5px;
 
     color: #34415e;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
 }
 
@@ -1029,7 +1029,7 @@
     display: block;
 
     color: #46546c;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.3;
     font-weight: 600;
 
@@ -1115,7 +1115,7 @@
     display: block;
 
     color: #43516b;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
 }
 
@@ -1125,7 +1125,7 @@
     margin-top: 2px;
 
     color: #8b95a7;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
 
     white-space: nowrap;
@@ -1220,7 +1220,7 @@
     display: block;
 
     color: #43516b;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
 }
 
@@ -1259,12 +1259,12 @@
 
 .today-summary-row span {
     color: #69758a;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .today-summary-row strong {
     color: #34415d;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 700;
 }
 
@@ -1295,7 +1295,7 @@
     justify-content: center;
 
     color: #8b95a7;
-    font-size: 8.5px;
+    font-size: 9px;
     text-align: center;
 }
 
@@ -1368,7 +1368,7 @@
     margin: 4px 0 0;
 
     color: #8993a6;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .modal-close {
@@ -1455,7 +1455,7 @@
     margin-bottom: 4px;
 
     color: #59667d;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.2;
     font-weight: 600;
 }
@@ -1474,7 +1474,7 @@
     color: #46536c;
 
     font-family: inherit;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .form-group input,
@@ -1530,7 +1530,7 @@
 
     color: #59667d;
 
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 
     cursor: pointer;
@@ -1602,7 +1602,7 @@
 
     color: #59667d;
 
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 
     cursor: pointer;
@@ -1662,14 +1662,14 @@
     margin-bottom: 4px;
 
     color: #8a95a7;
-    font-size: 8.5px;
+    font-size: 9px;
 }
 
 .view-summary-grid strong {
     display: block;
 
     color: #34415d;
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 700;
 }
 
@@ -1703,7 +1703,7 @@
     align-items: center;
     gap: 6px;
 
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 600;
 }
 
@@ -1735,7 +1735,7 @@
     border-radius: 5px;
 
     color: #5d6a80;
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.5;
 }
 
