@@ -514,12 +514,18 @@ const DispatchManagement = () => {
         "Dispatch Date",
         "Invoice",
         "Customer",
+        "Route",
         "Destination",
-        "Transporter",
-        "Vehicle No.",
-        "Quantity",
+        "Ordered Quantity",
+        "Dispatch Quantity",
         "Unit",
+        "Driver",
+        "Vehicle No.",
+        "Transport Mode",
+        "Transporter",
+        "Dispatch Team",
         "Status",
+        "Remarks",
         "POD",
       ],
       ...filteredDispatches.map((item) => [
@@ -527,25 +533,40 @@ const DispatchManagement = () => {
         formatDateTime(item.dispatchDate),
         item.invoice,
         item.customer,
+        item.route,
         item.destination,
-        item.transporter,
-        item.vehicle,
+        item.orderedQuantity,
         item.quantity,
         item.unit,
-        statusLabel(item.status),
+        item.driver,
+        item.vehicle,
+        item.transportMode,
+        Array.isArray(item.dispatchTeam)
+          ? item.dispatchTeam.join(", ")
+          : item.dispatchTeam,
+        item.transporter,
+        item.status,
+        item.remarks,
         item.pod ? "Uploaded" : "Pending",
       ]),
     ];
 
     const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+
     a.href = url;
     a.download = `dispatch-report-${new Date().toISOString().slice(0, 10)}.csv`;
+
     document.body.appendChild(a);
     a.click();
     a.remove();
+
     URL.revokeObjectURL(url);
   };
 
@@ -573,71 +594,123 @@ const DispatchManagement = () => {
     return values;
   };
 
-  const importCsv = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
+ const importCsv = (file) => {
+  if (!file) return;
 
-    reader.onload = async (event) => {
-      try {
-        const lines = String(event.target?.result || "")
-          .split(/\r?\n/)
-          .filter(Boolean);
+  if (!file.name.toLowerCase().endsWith(".csv")) {
+    alert("Please select a CSV file");
+    return;
+  }
 
-        if (lines.length < 2) throw new Error("CSV has no data rows");
+  const reader = new FileReader();
 
-        const headers = parseCsvLine(lines[0]);
-        let count = 0;
+  reader.onload = async (event) => {
+    try {
+      const lines = String(event.target?.result || "")
+        .split(/\r?\n/)
+        .filter((line) => line.trim());
 
-        for (const line of lines.slice(1)) {
-          const values = parseCsvLine(line);
-          const row = {};
-          headers.forEach((header, index) => {
-            row[String(header || "").trim()] = values[index] ?? "";
-          });
+      if (lines.length < 2) {
+        throw new Error("CSV has no data rows");
+      }
 
-          if (!row.Customer || !row.Invoice || !row.Quantity) continue;
+      const headers = parseCsvLine(lines[0]).map((header, index) =>
+        String(header || "")
+          .replace(index === 0 ? /^\uFEFF/ : /$^/, "")
+          .trim()
+      );
 
-          const status = String(row.Status || "PENDING")
-            .trim()
-            .toUpperCase();
+      const requiredHeaders = [
+        "Customer",
+        "Invoice",
+        "Ordered Quantity",
+        "Dispatch Quantity",
+        "Unit",
+      ];
 
-          if (!STATUS_OPTIONS.some((item) => item.value === status)) {
-            continue;
-          }
+      const missingHeaders = requiredHeaders.filter(
+        (header) => !headers.includes(header)
+      );
 
-          await axios.post(
-            `${API_BASE_URL}/dispatch`,
-            {
-              customer: row.Customer,
-              invoice: row.Invoice,
-              route: row.Route || "",
-              destination: row.Destination || "",
-              quantity: Number(row.Quantity),
-              unit: row.Unit || "Ltr",
-              driver: row.Driver || "",
-              vehicle: row.Vehicle || row["Vehicle No."] || "",
-              transportMode: row["Transport Mode"] || "Road",
-              transporter: row.Transporter || "",
-              dispatchTeam: row["Dispatch Team"] || "",
-              status,
-              remarks: row.Remarks || "",
-            },
-            authConfig()
-          );
+      if (missingHeaders.length) {
+        throw new Error(
+          `Missing CSV columns: ${missingHeaders.join(", ")}`
+        );
+      }
 
-          count += 1;
+      let count = 0;
+      let skipped = 0;
+
+      for (const line of lines.slice(1)) {
+        const values = parseCsvLine(line);
+        const row = {};
+
+        headers.forEach((header, index) => {
+          row[header] = values[index] ?? "";
+        });
+
+        const orderedQuantity = Number(row["Ordered Quantity"]);
+        const quantity = Number(row["Dispatch Quantity"]);
+
+        if (
+          !row.Customer?.trim() ||
+          !row.Invoice?.trim() ||
+          !Number.isFinite(orderedQuantity) ||
+          !Number.isFinite(quantity) ||
+          orderedQuantity <= 0 ||
+          quantity <= 0 ||
+          quantity > orderedQuantity
+        ) {
+          skipped += 1;
+          continue;
         }
 
-        await fetchDashboard();
-        alert(`${count} dispatch record(s) imported successfully`);
-      } catch (err) {
-        console.error("Import dispatch error:", err?.response?.data || err);
-        alert(apiError(err, "Failed to import dispatch CSV"));
-      }
-    };
+        const status = String(row.Status || "PENDING")
+          .trim()
+          .toUpperCase();
 
-    reader.readAsText(file);
+        if (!STATUS_OPTIONS.some((item) => item.value === status)) {
+          skipped += 1;
+          continue;
+        }
+
+        await axios.post(
+          `${API_BASE_URL}/dispatch`,
+          {
+            customer: row.Customer.trim(),
+            invoice: row.Invoice.trim(),
+            route: row.Route || "",
+            destination: row.Destination || "",
+            orderedQuantity,
+            quantity,
+            unit: row.Unit || "Ltr",
+            driver: row.Driver || "",
+            vehicle: row["Vehicle No."] || "",
+            transportMode: row["Transport Mode"] || "Road",
+            transporter: row.Transporter || "",
+            dispatchTeam: row["Dispatch Team"] || "",
+            status,
+            remarks: row.Remarks || "",
+          },
+          authConfig()
+        );
+
+        count += 1;
+      }
+
+      await fetchDashboard();
+
+      alert(
+        `${count} dispatch record(s) imported successfully.\n${skipped} row(s) skipped.`
+      );
+    } catch (err) {
+      console.error("Import dispatch error:", err?.response?.data || err);
+      alert(apiError(err, "Failed to import dispatch CSV"));
+    }
   };
+
+  reader.readAsText(file);
+};
 
   const renderStatusBadge = (status) => (
     <span className={`dispatch-status-badge status-${String(status || "").toLowerCase()}`}>
@@ -664,25 +737,25 @@ const DispatchManagement = () => {
   );
 
   const getInvoiceFulfillment = (item) => {
-  const matchingDispatches = dispatches.filter(
-    (dispatch) =>
-      dispatch.customer === item.customer &&
-      dispatch.invoice === item.invoice
-  );
+    const matchingDispatches = dispatches.filter(
+      (dispatch) =>
+        dispatch.customer === item.customer &&
+        dispatch.invoice === item.invoice
+    );
 
-  const totalDispatched = matchingDispatches.reduce(
-    (total, dispatch) => total + Number(dispatch.quantity || 0),
-    0
-  );
+    const totalDispatched = matchingDispatches.reduce(
+      (total, dispatch) => total + Number(dispatch.quantity || 0),
+      0
+    );
 
-  const ordered = Number(item.orderedQuantity || 0);
+    const ordered = Number(item.orderedQuantity || 0);
 
-  return {
-    ordered,
-    totalDispatched,
-    pending: Math.max(0, ordered - totalDispatched),
+    return {
+      ordered,
+      totalDispatched,
+      pending: Math.max(0, ordered - totalDispatched),
+    };
   };
-};
 
   return (
     <div className="dispatch-management-page">
@@ -802,86 +875,86 @@ const DispatchManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-  {filteredDispatches.length === 0 ? (
-    <tr>
-      <td colSpan="14" className="dispatch-empty-cell">
-        No dispatch records found.
-      </td>
-    </tr>
-  ) : (
-    paginatedDispatches.map((item) => {
-      const fulfillment = getInvoiceFulfillment(item);
+                  {filteredDispatches.length === 0 ? (
+                    <tr>
+                      <td colSpan="14" className="dispatch-empty-cell">
+                        No dispatch records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedDispatches.map((item) => {
+                      const fulfillment = getInvoiceFulfillment(item);
 
-      return (
-        <tr key={item._id}>
-          <td><strong>{item.dispatchNumber}</strong></td>
-          <td>{formatDateTime(item.dispatchDate)}</td>
-          <td>{item.invoice || "-"}</td>
-          <td>{item.customer || "-"}</td>
-          <td>{item.destination || "-"}</td>
-          <td>{item.transporter || "-"}</td>
-          <td>{item.vehicle || "-"}</td>
+                      return (
+                        <tr key={item._id}>
+                          <td><strong>{item.dispatchNumber}</strong></td>
+                          <td>{formatDateTime(item.dispatchDate)}</td>
+                          <td>{item.invoice || "-"}</td>
+                          <td>{item.customer || "-"}</td>
+                          <td>{item.destination || "-"}</td>
+                          <td>{item.transporter || "-"}</td>
+                          <td>{item.vehicle || "-"}</td>
 
-          <td>
-            {formatNumber(fulfillment.ordered)} {item.unit || ""}
-          </td>
+                          <td>
+                            {formatNumber(fulfillment.ordered)} {item.unit || ""}
+                          </td>
 
-          <td>
-            {formatNumber(fulfillment.totalDispatched)} {item.unit || ""}
-          </td>
+                          <td>
+                            {formatNumber(fulfillment.totalDispatched)} {item.unit || ""}
+                          </td>
 
-          <td>
-            {formatNumber(fulfillment.pending)} {item.unit || ""}
-          </td>
+                          <td>
+                            {formatNumber(fulfillment.pending)} {item.unit || ""}
+                          </td>
 
-          <td>{renderStatusBadge(item.fulfillmentStatus)}</td>
-          <td>{renderStatusBadge(item.status)}</td>
+                          <td>{renderStatusBadge(item.fulfillmentStatus)}</td>
+                          <td>{renderStatusBadge(item.status)}</td>
 
-          <td>
-            {item.pod ? (
-              <span className="dispatch-pod-ready">
-                <CheckCircle2 size={14} /> Yes
-              </span>
-            ) : (
-              <span className="dispatch-pod-pending">—</span>
-            )}
-          </td>
+                          <td>
+                            {item.pod ? (
+                              <span className="dispatch-pod-ready">
+                                <CheckCircle2 size={14} /> Yes
+                              </span>
+                            ) : (
+                              <span className="dispatch-pod-pending">—</span>
+                            )}
+                          </td>
 
-          <td>
-            <div className="dispatch-action-group">
-              <button
-                type="button"
-                className="dispatch-icon-btn"
-                title="View"
-                onClick={() => openView(item)}
-              >
-                <Eye size={15} />
-              </button>
+                          <td>
+                            <div className="dispatch-action-group">
+                              <button
+                                type="button"
+                                className="dispatch-icon-btn"
+                                title="View"
+                                onClick={() => openView(item)}
+                              >
+                                <Eye size={15} />
+                              </button>
 
-              <button
-                type="button"
-                className="dispatch-icon-btn"
-                title="Edit"
-                onClick={() => openEdit(item)}
-              >
-                <Pencil size={15} />
-              </button>
+                              <button
+                                type="button"
+                                className="dispatch-icon-btn"
+                                title="Edit"
+                                onClick={() => openEdit(item)}
+                              >
+                                <Pencil size={15} />
+                              </button>
 
-              <button
-                type="button"
-                className="dispatch-icon-btn danger"
-                title="Delete"
-                onClick={() => deleteDispatch(item)}
-              >
-                <Trash2 size={15} />
-              </button>
-            </div>
-          </td>
-        </tr>
-      );
-    })
-  )}
-</tbody>
+                              <button
+                                type="button"
+                                className="dispatch-icon-btn danger"
+                                title="Delete"
+                                onClick={() => deleteDispatch(item)}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
               </table>
             </div>
             <div className="dispatch-pagination">
