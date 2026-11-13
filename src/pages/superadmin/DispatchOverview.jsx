@@ -38,6 +38,7 @@ const EMPTY_FORM = {
   invoice: "",
   route: "",
   destination: "",
+  orderedQuantity: "",
   quantity: "",
   unit: "Ltr",
   driver: "",
@@ -336,6 +337,7 @@ const DispatchManagement = () => {
       invoice: item.invoice || "",
       route: item.route || "",
       destination: item.destination || "",
+      orderedQuantity: item.orderedQuantity ?? "",
       quantity: item.quantity ?? "",
       unit: item.unit || "Ltr",
       driver: item.driver || "",
@@ -643,6 +645,24 @@ const DispatchManagement = () => {
     </span>
   );
 
+  const selectedDispatchGroup = selectedDispatch
+    ? dispatches.filter(
+      (item) =>
+        item.customer === selectedDispatch.customer &&
+        item.invoice === selectedDispatch.invoice
+    )
+    : [];
+
+  const totalDispatchedQuantity = selectedDispatchGroup.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0
+  );
+
+  const pendingQuantity = Math.max(
+    0,
+    Number(selectedDispatch?.orderedQuantity || 0) - totalDispatchedQuantity
+  );
+
   return (
     <div className="dispatch-management-page">
       <div className="dispatch-page-header">
@@ -742,21 +762,104 @@ const DispatchManagement = () => {
             <div className="dispatch-panel-header"><div><h2>Recent Dispatches</h2><p>Latest outbound dispatch records</p></div><span className="dispatch-record-count">{filteredDispatches.length} records</span></div>
             <div className="dispatch-table-wrapper">
               <table className="dispatch-table">
-                <thead><tr><th>Dispatch No.</th><th>Dispatch Date</th><th>Order / Invoice No.</th><th>Customer / Party</th><th>Destination</th><th>Transporter</th><th>Vehicle No.</th><th>Qty (MT/Ltrs)</th><th>Status</th><th>POD</th><th>Actions</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Dispatch No.</th>
+                    <th>Dispatch Date</th>
+                    <th>Order / Invoice No.</th>
+                    <th>Customer / Party</th>
+                    <th>Destination</th>
+                    <th>Transporter</th>
+                    <th>Vehicle No.</th>
+                    <th>Ordered Qty</th>
+                    <th>Dispatched Qty</th>
+                    <th>Pending Qty</th>
+                    <th>Fulfillment Status</th>
+                    <th>Status</th>
+                    <th>POD</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {filteredDispatches.length === 0 ? <tr><td colSpan="11" className="dispatch-empty-cell">No dispatch records found.</td></tr> : paginatedDispatches.map((item) => <tr key={item._id}>
-                    <td><strong>{item.dispatchNumber}</strong></td>
-                    <td>{formatDateTime(item.dispatchDate)}</td>
-                    <td>{item.invoice || "-"}</td>
-                    <td>{item.customer || "-"}</td>
-                    <td>{item.destination || "-"}</td>
-                    <td>{item.transporter || "-"}</td>
-                    <td>{item.vehicle || "-"}</td>
-                    <td>{formatNumber(item.quantity)} {item.unit || ""}</td>
-                    <td>{renderStatusBadge(item.status)}</td>
-                    <td>{item.pod ? <span className="dispatch-pod-ready"><CheckCircle2 size={14} />Yes</span> : <span className="dispatch-pod-pending">—</span>}</td>
-                    <td><div className="dispatch-action-group"><button type="button" className="dispatch-icon-btn" title="View" onClick={() => openView(item)}><Eye size={15} /></button><button type="button" className="dispatch-icon-btn" title="Edit" onClick={() => openEdit(item)}><Pencil size={15} /></button><button type="button" className="dispatch-icon-btn danger" title="Delete" onClick={() => deleteDispatch(item)}><Trash2 size={15} /></button></div></td>
-                  </tr>)}
+                  {filteredDispatches.length === 0 ? (
+                    <tr>
+                      <td colSpan="14" className="dispatch-empty-cell">
+                        No dispatch records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedDispatches.map((item) => (
+                      <tr key={item._id}>
+                        <td><strong>{item.dispatchNumber}</strong></td>
+                        <td>{formatDateTime(item.dispatchDate)}</td>
+                        <td>{item.invoice || "-"}</td>
+                        <td>{item.customer || "-"}</td>
+                        <td>{item.destination || "-"}</td>
+                        <td>{item.transporter || "-"}</td>
+                        <td>{item.vehicle || "-"}</td>
+
+                        <td>
+                          {formatNumber(item.orderedQuantity)} {item.unit || ""}
+                        </td>
+
+                        <td>
+                          {formatNumber(item.quantity)} {item.unit || ""}
+                        </td>
+
+                        <td>
+                          {formatNumber(
+                            Math.max(0, (item.orderedQuantity || 0) - (item.quantity || 0))
+                          )}{" "}
+                          {item.unit || ""}
+                        </td>
+
+                        <td>{renderStatusBadge(item.fulfillmentStatus)}</td>
+
+                        <td>{renderStatusBadge(item.status)}</td>
+
+                        <td>
+                          {item.pod ? (
+                            <span className="dispatch-pod-ready">
+                              <CheckCircle2 size={14} /> Yes
+                            </span>
+                          ) : (
+                            <span className="dispatch-pod-pending">—</span>
+                          )}
+                        </td>
+
+                        <td>
+                          <div className="dispatch-action-group">
+                            <button
+                              type="button"
+                              className="dispatch-icon-btn"
+                              title="View"
+                              onClick={() => openView(item)}
+                            >
+                              <Eye size={15} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="dispatch-icon-btn"
+                              title="Edit"
+                              onClick={() => openEdit(item)}
+                            >
+                              <Pencil size={15} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="dispatch-icon-btn danger"
+                              title="Delete"
+                              onClick={() => deleteDispatch(item)}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -874,7 +977,8 @@ const DispatchManagement = () => {
                 <div className="dispatch-form-group"><label>Customer *</label><input name="customer" value={form.customer} onChange={(e) => /^[A-Za-z\s]*$/.test(e.target.value) && changeForm(e)} required /></div>                <div className="dispatch-form-group"><label>Invoice *</label><input name="invoice" value={form.invoice} onChange={changeForm} required /></div>
                 <div className="dispatch-form-group"><label>Route</label><input name="route" value={form.route} onChange={changeForm} /></div>
                 <div className="dispatch-form-group"><label>Destination</label><input name="destination" value={form.destination} onChange={changeForm} /></div>
-                <div className="dispatch-form-group"><label>Quantity *</label><input type="number" min="0" step="any" name="quantity" value={form.quantity} onChange={changeForm} required /></div>
+                <div className="dispatch-form-group">  <label>Ordered Quantity *</label>  <input type="number" min="0.01" step="any" name="orderedQuantity" value={form.orderedQuantity} onChange={changeForm} required /></div>
+                <div className="dispatch-form-group"><label>Dispatch Quantity *</label><input type="number" min="0" step="any" name="quantity" value={form.quantity} onChange={changeForm} required /></div>
                 <div className="dispatch-form-group"><label>Unit *</label><select name="unit" value={form.unit} onChange={changeForm}><option value="Ltr">Ltr</option><option value="MT">MT</option><option value="Kg">Kg</option><option value="Nos">Nos</option></select></div>
                 <div className="dispatch-form-group"><label>Driver</label><input name="driver" value={form.driver} onChange={changeForm} /></div>
                 <div className="dispatch-form-group"><label>Vehicle</label><input name="vehicle" value={form.vehicle} onChange={changeForm} /></div>
@@ -906,7 +1010,31 @@ const DispatchManagement = () => {
               <div><span>Invoice</span><strong>{selectedDispatch.invoice || "-"}</strong></div>
               <div><span>Route</span><strong>{selectedDispatch.route || "-"}</strong></div>
               <div><span>Destination</span><strong>{selectedDispatch.destination || "-"}</strong></div>
-              <div><span>Quantity</span><strong>{formatNumber(selectedDispatch.quantity)} {selectedDispatch.unit || ""}</strong></div>
+              <div>
+                <span>Ordered Quantity</span>
+                <strong>
+                  {formatNumber(selectedDispatch.orderedQuantity)} {selectedDispatch.unit || ""}
+                </strong>
+              </div>
+
+              <div>
+                <span>Total Dispatched Quantity</span>
+                <strong>
+                  {formatNumber(totalDispatchedQuantity)} {selectedDispatch.unit || ""}
+                </strong>
+              </div>
+
+              <div>
+                <span>Pending Quantity</span>
+                <strong>
+                  {formatNumber(pendingQuantity)} {selectedDispatch.unit || ""}
+                </strong>
+              </div>
+
+              <div>
+                <span>Fulfillment Status</span>
+                <div>{renderStatusBadge(selectedDispatch.fulfillmentStatus)}</div>
+              </div>
               <div><span>Driver</span><strong>{selectedDispatch.driver || "-"}</strong></div>
               <div><span>Vehicle</span><strong>{selectedDispatch.vehicle || "-"}</strong></div>
               <div><span>Transport Mode</span><strong>{selectedDispatch.transportMode || "-"}</strong></div>

@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import "../../css/superadmin/productmanagement.css";
 
-
 const ProductManagement = () => {
     const [products, setProducts] = useState([]);
     const [stats, setStats] = useState({
