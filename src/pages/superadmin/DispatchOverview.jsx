@@ -663,6 +663,27 @@ const DispatchManagement = () => {
     Number(selectedDispatch?.orderedQuantity || 0) - totalDispatchedQuantity
   );
 
+  const getInvoiceFulfillment = (item) => {
+  const matchingDispatches = dispatches.filter(
+    (dispatch) =>
+      dispatch.customer === item.customer &&
+      dispatch.invoice === item.invoice
+  );
+
+  const totalDispatched = matchingDispatches.reduce(
+    (total, dispatch) => total + Number(dispatch.quantity || 0),
+    0
+  );
+
+  const ordered = Number(item.orderedQuantity || 0);
+
+  return {
+    ordered,
+    totalDispatched,
+    pending: Math.max(0, ordered - totalDispatched),
+  };
+};
+
   return (
     <div className="dispatch-management-page">
       <div className="dispatch-page-header">
@@ -781,86 +802,86 @@ const DispatchManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDispatches.length === 0 ? (
-                    <tr>
-                      <td colSpan="14" className="dispatch-empty-cell">
-                        No dispatch records found.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedDispatches.map((item) => (
-                      <tr key={item._id}>
-                        <td><strong>{item.dispatchNumber}</strong></td>
-                        <td>{formatDateTime(item.dispatchDate)}</td>
-                        <td>{item.invoice || "-"}</td>
-                        <td>{item.customer || "-"}</td>
-                        <td>{item.destination || "-"}</td>
-                        <td>{item.transporter || "-"}</td>
-                        <td>{item.vehicle || "-"}</td>
+  {filteredDispatches.length === 0 ? (
+    <tr>
+      <td colSpan="14" className="dispatch-empty-cell">
+        No dispatch records found.
+      </td>
+    </tr>
+  ) : (
+    paginatedDispatches.map((item) => {
+      const fulfillment = getInvoiceFulfillment(item);
 
-                        <td>
-                          {formatNumber(item.orderedQuantity)} {item.unit || ""}
-                        </td>
+      return (
+        <tr key={item._id}>
+          <td><strong>{item.dispatchNumber}</strong></td>
+          <td>{formatDateTime(item.dispatchDate)}</td>
+          <td>{item.invoice || "-"}</td>
+          <td>{item.customer || "-"}</td>
+          <td>{item.destination || "-"}</td>
+          <td>{item.transporter || "-"}</td>
+          <td>{item.vehicle || "-"}</td>
 
-                        <td>
-                          {formatNumber(item.quantity)} {item.unit || ""}
-                        </td>
+          <td>
+            {formatNumber(fulfillment.ordered)} {item.unit || ""}
+          </td>
 
-                        <td>
-                          {formatNumber(
-                            Math.max(0, (item.orderedQuantity || 0) - (item.quantity || 0))
-                          )}{" "}
-                          {item.unit || ""}
-                        </td>
+          <td>
+            {formatNumber(fulfillment.totalDispatched)} {item.unit || ""}
+          </td>
 
-                        <td>{renderStatusBadge(item.fulfillmentStatus)}</td>
+          <td>
+            {formatNumber(fulfillment.pending)} {item.unit || ""}
+          </td>
 
-                        <td>{renderStatusBadge(item.status)}</td>
+          <td>{renderStatusBadge(item.fulfillmentStatus)}</td>
+          <td>{renderStatusBadge(item.status)}</td>
 
-                        <td>
-                          {item.pod ? (
-                            <span className="dispatch-pod-ready">
-                              <CheckCircle2 size={14} /> Yes
-                            </span>
-                          ) : (
-                            <span className="dispatch-pod-pending">—</span>
-                          )}
-                        </td>
+          <td>
+            {item.pod ? (
+              <span className="dispatch-pod-ready">
+                <CheckCircle2 size={14} /> Yes
+              </span>
+            ) : (
+              <span className="dispatch-pod-pending">—</span>
+            )}
+          </td>
 
-                        <td>
-                          <div className="dispatch-action-group">
-                            <button
-                              type="button"
-                              className="dispatch-icon-btn"
-                              title="View"
-                              onClick={() => openView(item)}
-                            >
-                              <Eye size={15} />
-                            </button>
+          <td>
+            <div className="dispatch-action-group">
+              <button
+                type="button"
+                className="dispatch-icon-btn"
+                title="View"
+                onClick={() => openView(item)}
+              >
+                <Eye size={15} />
+              </button>
 
-                            <button
-                              type="button"
-                              className="dispatch-icon-btn"
-                              title="Edit"
-                              onClick={() => openEdit(item)}
-                            >
-                              <Pencil size={15} />
-                            </button>
+              <button
+                type="button"
+                className="dispatch-icon-btn"
+                title="Edit"
+                onClick={() => openEdit(item)}
+              >
+                <Pencil size={15} />
+              </button>
 
-                            <button
-                              type="button"
-                              className="dispatch-icon-btn danger"
-                              title="Delete"
-                              onClick={() => deleteDispatch(item)}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
+              <button
+                type="button"
+                className="dispatch-icon-btn danger"
+                title="Delete"
+                onClick={() => deleteDispatch(item)}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
               </table>
             </div>
             <div className="dispatch-pagination">
