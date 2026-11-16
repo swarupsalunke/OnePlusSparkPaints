@@ -2031,172 +2031,172 @@ const EmployeeHRManagement = () => {
             )}
 
             {/* PAYROLL PROCESS MODAL */}
-{showPayrollModal && (
-    <div className="modal-overlay">
-        <div className="employee-modal">
-            <div className="modal-header">
-                <div>
-                    <h2>Process Payroll</h2>
-                    <p>Enter employee salary details</p>
-                </div>
-                <button
-                    type="button"
-                    className="modal-close"
-                    onClick={() => setShowPayrollModal(false)}
-                >
-                    <X size={20} />
-                </button>
-            </div>
+            {showPayrollModal && (
+                <div className="modal-overlay">
+                    <div className="employee-modal">
+                        <div className="modal-header">
+                            <div>
+                                <h2>Process Payroll</h2>
+                                <p>Enter employee salary details</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="modal-close"
+                                onClick={() => setShowPayrollModal(false)}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
-            <form onSubmit={handleSubmitPayroll}>
-                <div className="employee-form">
-                    <div className="form-grid">
+                        <form onSubmit={handleSubmitPayroll}>
+                            <div className="employee-form">
+                                <div className="form-grid">
 
-                        <div className="form-group">
-                            <label>Employee *</label>
-                            <div className="form-select-wrapper">
-                                <select
-                                    name="employeeId"
-                                    value={payrollForm.employeeId}
-                                    onChange={(e) =>
-                                        fetchEmployeeSalary(e.target.value)
-                                    }
-                                    required
-                                >
-                                    <option value="">Select Employee</option>
-                                    {employees
-                                        .filter((emp) => emp.status === "Active")
-                                        .map((emp) => (
-                                            <option
-                                                key={emp._id}
-                                                value={emp._id}
+                                    <div className="form-group">
+                                        <label>Employee *</label>
+                                        <div className="form-select-wrapper">
+                                            <select
+                                                name="employeeId"
+                                                value={payrollForm.employeeId}
+                                                onChange={(e) =>
+                                                    fetchEmployeeSalary(e.target.value)
+                                                }
+                                                required
                                             >
-                                                {emp.name} ({emp.employeeId})
-                                            </option>
-                                        ))}
-                                </select>
-                                <ChevronDown size={16} />
-                            </div>
-                        </div>
+                                                <option value="">Select Employee</option>
+                                                {employees
+                                                    .filter((emp) => emp.status === "ACTIVE")
+                                                    .map((emp) => (
+                                                        <option
+                                                            key={emp._id}
+                                                            value={emp._id}
+                                                        >
+                                                            {emp.name} ({emp.employeeId})
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                            <ChevronDown size={16} />
+                                        </div>
+                                    </div>
 
-                        <div className="form-group">
-                            <label>Month *</label>
-                            <div className="form-select-wrapper">
-                                <select
-                                    name="month"
-                                    value={payrollForm.month}
-                                    onChange={handlePayrollInput}
-                                    required
+                                    <div className="form-group">
+                                        <label>Month *</label>
+                                        <div className="form-select-wrapper">
+                                            <select
+                                                name="month"
+                                                value={payrollForm.month}
+                                                onChange={handlePayrollInput}
+                                                required
+                                            >
+                                                {Array.from({ length: 12 }, (_, i) => (
+                                                    <option key={i + 1} value={i + 1}>
+                                                        {new Date(2000, i).toLocaleString(
+                                                            "en-IN",
+                                                            { month: "long" }
+                                                        )}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={16} />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Year *</label>
+                                        <input
+                                            type="number"
+                                            name="year"
+                                            min="2020"
+                                            value={payrollForm.year}
+                                            onChange={handlePayrollInput}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Basic Salary (₹) *</label>
+                                        <input
+                                            type="number"
+                                            name="basicSalary"
+                                            min="0"
+                                            step="0.01"
+                                            value={payrollForm.basicSalary}
+                                            onChange={handlePayrollInput}
+                                            placeholder="Enter basic salary"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Allowances (₹)</label>
+                                        <input
+                                            type="number"
+                                            name="allowances"
+                                            min="0"
+                                            step="0.01"
+                                            value={payrollForm.allowances}
+                                            onChange={handlePayrollInput}
+                                            placeholder="Enter allowances"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Deductions (₹)</label>
+                                        <input
+                                            type="number"
+                                            name="deductions"
+                                            min="0"
+                                            step="0.01"
+                                            value={payrollForm.deductions}
+                                            onChange={handlePayrollInput}
+                                            placeholder="Enter deductions"
+                                        />
+                                    </div>
+
+                                </div>
+
+                                {payrollLoading && (
+                                    <p>Fetching saved salary details...</p>
+                                )}
+
+                                <div className="payroll-net-salary">
+                                    <span>Net Salary</span>
+                                    <strong>
+                                        ₹{netSalary.toLocaleString("en-IN")}
+                                    </strong>
+                                </div>
+
+                                {payrollError && (
+                                    <div className="form-error">
+                                        <AlertCircle size={17} />
+                                        <span>{payrollError}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="cancel-button"
+                                    onClick={() => setShowPayrollModal(false)}
+                                    disabled={savingPayroll}
                                 >
-                                    {Array.from({ length: 12 }, (_, i) => (
-                                        <option key={i + 1} value={i + 1}>
-                                            {new Date(2000, i).toLocaleString(
-                                                "en-IN",
-                                                { month: "long" }
-                                            )}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown size={16} />
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="save-employee-button"
+                                    disabled={savingPayroll || payrollLoading}
+                                >
+                                    <Save size={17} />
+                                    {savingPayroll ? "Processing..." : "Process Payroll"}
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label>Year *</label>
-                            <input
-                                type="number"
-                                name="year"
-                                min="2020"
-                                value={payrollForm.year}
-                                onChange={handlePayrollInput}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Basic Salary (₹) *</label>
-                            <input
-                                type="number"
-                                name="basicSalary"
-                                min="0"
-                                step="0.01"
-                                value={payrollForm.basicSalary}
-                                onChange={handlePayrollInput}
-                                placeholder="Enter basic salary"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Allowances (₹)</label>
-                            <input
-                                type="number"
-                                name="allowances"
-                                min="0"
-                                step="0.01"
-                                value={payrollForm.allowances}
-                                onChange={handlePayrollInput}
-                                placeholder="Enter allowances"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Deductions (₹)</label>
-                            <input
-                                type="number"
-                                name="deductions"
-                                min="0"
-                                step="0.01"
-                                value={payrollForm.deductions}
-                                onChange={handlePayrollInput}
-                                placeholder="Enter deductions"
-                            />
-                        </div>
-
+                        </form>
                     </div>
-
-                    {payrollLoading && (
-                        <p>Fetching saved salary details...</p>
-                    )}
-
-                    <div className="payroll-net-salary">
-                        <span>Net Salary</span>
-                        <strong>
-                            ₹{netSalary.toLocaleString("en-IN")}
-                        </strong>
-                    </div>
-
-                    {payrollError && (
-                        <div className="form-error">
-                            <AlertCircle size={17} />
-                            <span>{payrollError}</span>
-                        </div>
-                    )}
                 </div>
-
-                <div className="modal-footer">
-                    <button
-                        type="button"
-                        className="cancel-button"
-                        onClick={() => setShowPayrollModal(false)}
-                        disabled={savingPayroll}
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        className="save-employee-button"
-                        disabled={savingPayroll || payrollLoading}
-                    >
-                        <Save size={17} />
-                        {savingPayroll ? "Processing..." : "Process Payroll"}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-)}
+            )}
 
 
             {/* =====================================================
