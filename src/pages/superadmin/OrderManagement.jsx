@@ -86,7 +86,19 @@ const OrderManagement = () => {
     //     
     const [viewOrder, setViewOrder] = useState(null);
 
-    //     
+
+    // TRACK ORDER STATE
+    const [showTrackOrderModal, setShowTrackOrderModal] = useState(false);
+    const [selectedTrackOrder, setSelectedTrackOrder] = useState("");
+
+    // CANCELLED ORDERS STATE
+    const [showCancelledOrdersModal, setShowCancelledOrdersModal] = useState(false);
+    const [cancelledOrderSearch, setCancelledOrderSearch] = useState("");
+
+    // ORDER REPORT STATE
+    const [showOrderReportModal, setShowOrderReportModal] = useState(false);
+    const [orderReportSearch, setOrderReportSearch] = useState("");
+
     // EDIT ORDER STATE
     //     
     const [showEditOrderModal, setShowEditOrderModal] = useState(false);
@@ -153,6 +165,56 @@ const OrderManagement = () => {
         setShowReturnsModal(true);
         fetchOrderReturns();
     };
+
+    // OPEN TRACK ORDER
+    const openTrackOrderModal = () => {
+        setSelectedTrackOrder("");
+        setShowTrackOrderModal(true);
+    };
+
+    // OPEN CANCELLED ORDERS
+    const openCancelledOrdersModal = () => {
+        setCancelledOrderSearch("");
+        setShowCancelledOrdersModal(true);
+    };
+
+    // OPEN ORDER REPORT
+    const openOrderReportModal = () => {
+        setOrderReportSearch("");
+        setShowOrderReportModal(true);
+    };
+
+    // FILTER ORDER REPORT
+    const filteredOrderReport = orders.filter((order) => {
+        const searchValue = orderReportSearch.toLowerCase().trim();
+
+        return (
+            !searchValue ||
+            order.orderNumber?.toLowerCase().includes(searchValue) ||
+            order.dealer?.name?.toLowerCase().includes(searchValue) ||
+            order.status?.toLowerCase().includes(searchValue)
+        );
+    });
+
+    // FILTER CANCELLED ORDERS
+    const filteredCancelledOrders = orders.filter((order) => {
+        const searchValue = cancelledOrderSearch.toLowerCase().trim();
+
+        return (
+            order.status === "Cancelled" &&
+            (
+                !searchValue ||
+                order.orderNumber?.toLowerCase().includes(searchValue) ||
+                order.dealer?.name?.toLowerCase().includes(searchValue) ||
+                order.dealer?.email?.toLowerCase().includes(searchValue)
+            )
+        );
+    });
+
+    // SELECTED TRACK ORDER
+    const trackOrder = orders.find(
+        (order) => order._id === selectedTrackOrder
+    );
 
     // HANDLE RETURN FORM CHANGE
     const handleReturnFormChange = (e) => {
@@ -1268,12 +1330,19 @@ const OrderManagement = () => {
                             <span>Order Returns</span>
                         </button>
 
-                        <button type="button" className="quick-action-btn">
+                        <button
+                            type="button"
+                            className="quick-action-btn"
+                            onClick={openTrackOrderModal}
+                        >
                             <Navigation size={18} />
                             <span>Track Order</span>
                         </button>
-
-                        <button type="button" className="quick-action-btn">
+                        <button
+                            type="button"
+                            className="quick-action-btn"
+                            onClick={openCancelledOrdersModal}
+                        >
                             <XCircle size={18} />
                             <span>Cancelled Orders</span>
                         </button>
@@ -1283,7 +1352,11 @@ const OrderManagement = () => {
                             <span>Bulk Upload</span>
                         </button>
 
-                        <button type="button" className="quick-action-btn">
+                        <button
+                            type="button"
+                            className="quick-action-btn"
+                            onClick={openOrderReportModal}
+                        >
                             <FileText size={18} />
                             <span>Order Report</span>
                         </button>
@@ -1291,12 +1364,14 @@ const OrderManagement = () => {
                 </div>
             </div>
 
+
             {/* ORDER RETURNS MODAL */}
             {showReturnsModal && (
-                <div className="order-modal-overlay">
-                    <div className="order-create-modal order-returns-modal">
+                <div className="order-return-overlay">
+                    <div className="order-return-modal">
 
-                        <div className="order-modal-header">
+                        {/* HEADER */}
+                        <div className="order-return-header">
                             <div>
                                 <h2>Order Returns</h2>
                                 <p>Manage and create order returns.</p>
@@ -1304,216 +1379,522 @@ const OrderManagement = () => {
 
                             <button
                                 type="button"
-                                className="order-modal-close"
+                                className="order-return-close"
                                 onClick={() => setShowReturnsModal(false)}
                             >
                                 <XCircle size={20} />
                             </button>
                         </div>
 
-                        {/* CREATE RETURN FORM */}
-                        <form
-                            className="order-create-form"
-                            onSubmit={handleCreateReturn}
-                        >
-                            <h3>Create Order Return</h3>
+                        {/* CONTENT */}
+                        <div className="order-return-content">
 
-                            <div className="order-form-grid">
+                            {/* CREATE RETURN FORM */}
+                            <form
+                                className="order-return-form"
+                                onSubmit={handleCreateReturn}
+                            >
+                                <h3>Create Order Return</h3>
 
-                                <div className="order-form-group">
-                                    <label>Select Order</label>
-                                    <select
-                                        name="order"
-                                        value={returnForm.order}
-                                        onChange={(e) => {
-                                            handleReturnFormChange(e);
-                                            setReturnForm((prev) => ({
-                                                ...prev,
-                                                order: e.target.value,
-                                                product: "",
-                                                quantity: 1,
-                                            }));
-                                        }}
-                                    >
-                                        <option value="">Select Order</option>
+                                <div className="order-return-form-grid">
 
-                                        {orders
-                                            .filter((order) => order.status !== "Cancelled")
-                                            .map((order) => (
-                                                <option key={order._id} value={order._id}>
-                                                    {order.orderNumber} - {order.dealer?.name || "N/A"}
+                                    <div className="order-return-field">
+                                        <label>Select Order</label>
+
+                                        <select
+                                            name="order"
+                                            value={returnForm.order}
+                                            onChange={(e) => {
+                                                handleReturnFormChange(e);
+                                                setReturnForm((prev) => ({
+                                                    ...prev,
+                                                    order: e.target.value,
+                                                    product: "",
+                                                    quantity: 1,
+                                                }));
+                                            }}
+                                        >
+                                            <option value="">Select Order</option>
+
+                                            {orders
+                                                .filter((order) => order.status !== "Cancelled")
+                                                .map((order) => (
+                                                    <option key={order._id} value={order._id}>
+                                                        {order.orderNumber} - {order.dealer?.name || "N/A"}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="order-return-field">
+                                        <label>Select Product</label>
+
+                                        <select
+                                            name="product"
+                                            value={returnForm.product}
+                                            onChange={handleReturnFormChange}
+                                            disabled={!selectedReturnOrder}
+                                        >
+                                            <option value="">Select Product</option>
+
+                                            {selectedReturnOrder?.items?.map((item, index) => (
+                                                <option
+                                                    key={item._id || index}
+                                                    value={item.product?._id || item.product}
+                                                >
+                                                    {item.product?.productName ||
+                                                        item.product?.name ||
+                                                        item.product?.sku ||
+                                                        "Product"}
+                                                    {" - Qty: "}{item.quantity}
                                                 </option>
                                             ))}
-                                    </select>
+                                        </select>
+                                    </div>
+
+                                    <div className="order-return-field">
+                                        <label>Return Quantity</label>
+
+                                        <input
+                                            type="number"
+                                            name="quantity"
+                                            min="1"
+                                            max={
+                                                selectedReturnOrder?.items?.find(
+                                                    (item) =>
+                                                        String(item.product?._id || item.product) ===
+                                                        returnForm.product
+                                                )?.quantity || 1
+                                            }
+                                            value={returnForm.quantity}
+                                            onChange={handleReturnFormChange}
+                                        />
+                                    </div>
+
+                                    <div className="order-return-field">
+                                        <label>Return Reason</label>
+
+                                        <select
+                                            name="returnReason"
+                                            value={returnForm.returnReason}
+                                            onChange={handleReturnFormChange}
+                                        >
+                                            <option value="">Select Reason</option>
+                                            <option value="Damaged product">Damaged Product</option>
+                                            <option value="Wrong product">Wrong Product</option>
+                                            <option value="Quality issue">Quality Issue</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="order-return-field order-return-full-width">
+                                        <label>Remarks</label>
+
+                                        <textarea
+                                            name="remarks"
+                                            rows="3"
+                                            placeholder="Enter remarks..."
+                                            value={returnForm.remarks}
+                                            onChange={handleReturnFormChange}
+                                        />
+                                    </div>
+
                                 </div>
 
-                                <div className="order-form-group">
-                                    <label>Select Product</label>
-                                    <select
-                                        name="product"
-                                        value={returnForm.product}
-                                        onChange={handleReturnFormChange}
-                                        disabled={!selectedReturnOrder}
+                                <div className="order-return-form-footer">
+                                    <button
+                                        type="submit"
+                                        className="order-return-submit"
+                                        disabled={creatingReturn}
                                     >
-                                        <option value="">Select Product</option>
+                                        {creatingReturn ? "Submitting..." : "Create Return"}
+                                    </button>
+                                </div>
+                            </form>
 
-                                        {selectedReturnOrder?.items?.map((item, index) => (
-                                            <option
-                                                key={item._id || index}
-                                                value={item.product?._id || item.product}
-                                            >
-                                                {item.product?.productName ||
-                                                    item.product?.name ||
-                                                    item.product?.sku ||
-                                                    "Product"}
-                                                {" - Qty: "}{item.quantity}
-                                            </option>
-                                        ))}
-                                    </select>
+                            {/* RETURN HISTORY */}
+                            <div className="order-return-history">
+
+                                <div className="order-return-history-header">
+                                    <div>
+                                        <h3>Return History</h3>
+                                        <p>View and manage all order returns.</p>
+                                    </div>
+
+                                    <span className="order-return-count">
+                                        {orderReturns.length} Returns
+                                    </span>
                                 </div>
 
-                                <div className="order-form-group">
-                                    <label>Return Quantity</label>
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        min="1"
-                                        max={
-                                            selectedReturnOrder?.items?.find(
-                                                (item) =>
-                                                    String(item.product?._id || item.product) ===
-                                                    returnForm.product
-                                            )?.quantity || 1
-                                        }
-                                        value={returnForm.quantity}
-                                        onChange={handleReturnFormChange}
-                                    />
+                                {returnsLoading ? (
+                                    <div className="order-return-empty">
+                                        Loading returns...
+                                    </div>
+                                ) : orderReturns.length === 0 ? (
+                                    <div className="order-return-empty">
+                                        No order returns found.
+                                    </div>
+                                ) : (
+                                    <div className="order-return-table-wrapper">
+                                        <table className="order-return-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order No.</th>
+                                                    <th>Dealer</th>
+                                                    <th>Product</th>
+                                                    <th>Quantity</th>
+                                                    <th>Return Amount</th>
+                                                    <th>Reason</th>
+                                                    <th>Return Status</th>
+                                                    <th>Refund Status</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {orderReturns.map((item) => (
+                                                    <tr key={item._id}>
+                                                        <td>
+                                                            <strong className="order-return-number">
+                                                                {item.order?.orderNumber || "N/A"}
+                                                            </strong>
+                                                        </td>
+
+                                                        <td>
+                                                            {item.dealer?.name || "N/A"}
+                                                        </td>
+
+                                                        <td>
+                                                            {item.items?.map((product) => (
+                                                                <div key={product._id}>
+                                                                    {product.product?.name ||
+                                                                        product.product?.productName ||
+                                                                        product.product?.sku ||
+                                                                        "Product"}
+                                                                </div>
+                                                            ))}
+                                                        </td>
+
+                                                        <td>
+                                                            {item.items?.reduce(
+                                                                (total, product) =>
+                                                                    total + Number(product.quantity || 0),
+                                                                0
+                                                            )}
+                                                        </td>
+
+                                                        <td>
+                                                            <strong className="order-return-amount">
+                                                                ₹{Number(item.returnAmount || 0).toLocaleString("en-IN")}
+                                                            </strong>
+                                                        </td>
+
+                                                        <td>{item.returnReason}</td>
+
+                                                        <td>
+                                                            <select
+                                                                className="order-return-status-select"
+                                                                value={item.returnStatus}
+                                                                onChange={(e) =>
+                                                                    handleUpdateReturnStatus(
+                                                                        item._id,
+                                                                        "returnStatus",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            >
+                                                                <option value="Pending">Pending</option>
+                                                                <option value="Approved">Approved</option>
+                                                                <option value="Rejected">Rejected</option>
+                                                                <option value="Completed">Completed</option>
+                                                            </select>
+                                                        </td>
+
+                                                        <td>
+                                                            <select
+                                                                className="order-return-status-select"
+                                                                value={item.refundStatus}
+                                                                onChange={(e) =>
+                                                                    handleUpdateReturnStatus(
+                                                                        item._id,
+                                                                        "refundStatus",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            >
+                                                                <option value="Pending">Pending</option>
+                                                                <option value="Refunded">Refunded</option>
+                                                                <option value="Not Applicable">Not Applicable</option>
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {/* ORDER REPORT MODAL */}
+            {showOrderReportModal && (
+                <div className="order-report-overlay">
+                    <div className="order-report-modal">
+
+                        {/* HEADER */}
+                        <div className="order-report-header">
+                            <div>
+                                <h2>Order Report</h2>
+                                <p>View overall order performance and details.</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="order-report-close"
+                                onClick={() => setShowOrderReportModal(false)}
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+
+                        {/* CONTENT */}
+                        <div className="order-report-content">
+
+                            {/* SUMMARY CARDS */}
+                            <div className="order-report-summary">
+
+                                <div className="order-report-card">
+                                    <span>Total Orders</span>
+                                    <h3>{orders.length}</h3>
                                 </div>
 
-                                <div className="order-form-group">
-                                    <label>Return Reason</label>
-                                    <select
-                                        name="returnReason"
-                                        value={returnForm.returnReason}
-                                        onChange={handleReturnFormChange}
-                                    >
-                                        <option value="">Select Reason</option>
-                                        <option value="Damaged product">Damaged Product</option>
-                                        <option value="Wrong product">Wrong Product</option>
-                                        <option value="Quality issue">Quality Issue</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                <div className="order-report-card">
+                                    <span>Delivered Orders</span>
+                                    <h3>
+                                        {orders.filter((o) => o.status === "Delivered").length}
+                                    </h3>
                                 </div>
 
-                                <div className="order-form-group full-width">
-                                    <label>Remarks</label>
-                                    <textarea
-                                        name="remarks"
-                                        rows="3"
-                                        placeholder="Enter remarks..."
-                                        value={returnForm.remarks}
-                                        onChange={handleReturnFormChange}
-                                    />
+                                <div className="order-report-card">
+                                    <span>Pending Orders</span>
+                                    <h3>
+                                        {orders.filter((o) =>
+                                            ["New", "Processing", "Approved"].includes(o.status)
+                                        ).length}
+                                    </h3>
+                                </div>
+
+                                <div className="order-report-card">
+                                    <span>Cancelled Orders</span>
+                                    <h3>
+                                        {orders.filter((o) => o.status === "Cancelled").length}
+                                    </h3>
+                                </div>
+
+                                <div className="order-report-card">
+                                    <span>Total Order Amount</span>
+                                    <h3>
+                                        ₹{orders.reduce(
+                                            (total, order) =>
+                                                total + Number(
+                                                    order.totalAmount || order.grandTotal || 0
+                                                ),
+                                            0
+                                        ).toLocaleString("en-IN")}
+                                    </h3>
                                 </div>
 
                             </div>
 
-                            <div className="order-modal-footer">
-                                <button
-                                    type="submit"
-                                    className="order-modal-submit"
-                                    disabled={creatingReturn}
-                                >
-                                    {creatingReturn ? "Submitting..." : "Create Return"}
-                                </button>
+                            {/* SEARCH */}
+                            <div className="order-report-toolbar">
+                                <input
+                                    type="text"
+                                    placeholder="Search order number, dealer or status..."
+                                    value={orderReportSearch}
+                                    onChange={(e) => setOrderReportSearch(e.target.value)}
+                                />
+
+                                <span className="order-report-count">
+                                    {filteredOrderReport.length} Orders
+                                </span>
                             </div>
-                        </form>
 
-                        {/* RETURNS LIST */}
-                        <div className="order-returns-list">
-                            <h3>Return History</h3>
-
-                            {returnsLoading ? (
-                                <p>Loading returns...</p>
-                            ) : orderReturns.length === 0 ? (
-                                <p>No order returns found.</p>
+                            {/* REPORT TABLE */}
+                            {filteredOrderReport.length === 0 ? (
+                                <div className="order-report-empty">
+                                    No orders found.
+                                </div>
                             ) : (
-                                <div className="order-table-wrapper">
-                                    <table className="order-table">
+                                <div className="order-report-table-wrapper">
+                                    <table className="order-report-table">
                                         <thead>
                                             <tr>
                                                 <th>Order No.</th>
                                                 <th>Dealer</th>
-                                                <th>Product</th>
-                                                <th>Quantity</th>
-                                                <th>Return Amount</th>
-                                                <th>Reason</th>
-                                                <th>Return Status</th>
-                                                <th>Refund Status</th>
+                                                <th>Order Date</th>
+                                                <th>Products</th>
+                                                <th>Total Amount</th>
+                                                <th>Payment Status</th>
+                                                <th>Order Status</th>
                                             </tr>
                                         </thead>
 
                                         <tbody>
-                                            {orderReturns.map((item) => (
-                                                <tr key={item._id}>
-                                                    <td>{item.order?.orderNumber || "N/A"}</td>
-                                                    <td>{item.dealer?.name || "N/A"}</td>
+                                            {filteredOrderReport.map((order) => (
+                                                <tr key={order._id}>
                                                     <td>
-                                                        {item.items?.map((product) => (
-                                                            <div key={product._id}>
-                                                                {product.product?.name ||
-                                                                    product.product?.productName ||
-                                                                    product.product?.sku ||
-                                                                    "Product"}
-                                                            </div>
-                                                        ))}
+                                                        <strong>
+                                                            {order.orderNumber || "N/A"}
+                                                        </strong>
                                                     </td>
+
+                                                    <td>{order.dealer?.name || "N/A"}</td>
+
                                                     <td>
-                                                        {item.items?.reduce(
-                                                            (total, product) =>
-                                                                total + Number(product.quantity || 0),
-                                                            0
-                                                        )}
+                                                        {order.createdAt
+                                                            ? new Date(order.createdAt).toLocaleDateString("en-IN")
+                                                            : "N/A"}
                                                     </td>
+
+                                                    <td>{order.items?.length || 0} Items</td>
+
                                                     <td>
-                                                        ₹{Number(item.returnAmount || 0).toLocaleString("en-IN")}
+                                                        ₹{Number(
+                                                            order.totalAmount || order.grandTotal || 0
+                                                        ).toLocaleString("en-IN")}
                                                     </td>
-                                                    <td>{item.returnReason}</td>
+
+                                                    <td>{order.paymentStatus || "N/A"}</td>
+
                                                     <td>
-                                                        <select
-                                                          className="return-status-select"
-                                                            value={item.returnStatus}
-                                                            onChange={(e) =>
-                                                                handleUpdateReturnStatus(
-                                                                    item._id,
-                                                                    "returnStatus",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        >
-                                                            <option value="Pending">Pending</option>
-                                                            <option value="Approved">Approved</option>
-                                                            <option value="Rejected">Rejected</option>
-                                                            <option value="Completed">Completed</option>
-                                                        </select>
+                                                        <span className="order-report-status">
+                                                            {order.status || "N/A"}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* FOOTER */}
+                        <div className="order-report-footer">
+                            <button
+                                type="button"
+                                onClick={() => setShowOrderReportModal(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
+            {/* CANCELLED ORDERS MODAL */}
+            {showCancelledOrdersModal && (
+                <div className="cancelled-orders-overlay">
+                    <div className="cancelled-orders-modal">
+
+                        {/* HEADER */}
+                        <div className="cancelled-orders-header">
+                            <div>
+                                <h2>Cancelled Orders</h2>
+                                <p>View all cancelled orders.</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="cancelled-orders-close"
+                                onClick={() => setShowCancelledOrdersModal(false)}
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+
+                        {/* CONTENT */}
+                        <div className="cancelled-orders-content">
+
+                            {/* SEARCH AND COUNT */}
+                            <div className="cancelled-orders-toolbar">
+                                <input
+                                    type="text"
+                                    placeholder="Search by order number or dealer..."
+                                    value={cancelledOrderSearch}
+                                    onChange={(e) => setCancelledOrderSearch(e.target.value)}
+                                />
+
+                                <span className="cancelled-orders-count">
+                                    {filteredCancelledOrders.length} Cancelled Orders
+                                </span>
+                            </div>
+
+                            {/* TABLE */}
+                            {filteredCancelledOrders.length === 0 ? (
+                                <div className="cancelled-orders-empty">
+                                    No cancelled orders found.
+                                </div>
+                            ) : (
+                                <div className="cancelled-orders-table-wrapper">
+                                    <table className="cancelled-orders-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order No.</th>
+                                                <th>Dealer</th>
+                                                <th>Order Date</th>
+                                                <th>Products</th>
+                                                <th>Total Amount</th>
+                                                <th>Payment Status</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {filteredCancelledOrders.map((order) => (
+                                                <tr key={order._id}>
+                                                    <td>
+                                                        <strong>
+                                                            {order.orderNumber || "N/A"}
+                                                        </strong>
                                                     </td>
 
                                                     <td>
-                                                        <select
-                                                          className="return-status-select"
-                                                            value={item.refundStatus}
-                                                            onChange={(e) =>
-                                                                handleUpdateReturnStatus(
-                                                                    item._id,
-                                                                    "refundStatus",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        >
-                                                            <option value="Pending">Pending</option>
-                                                            <option value="Refunded">Refunded</option>
-                                                            <option value="Not Applicable">Not Applicable</option>
-                                                        </select>
+                                                        {order.dealer?.name || "N/A"}
+                                                    </td>
+
+                                                    <td>
+                                                        {order.createdAt
+                                                            ? new Date(order.createdAt).toLocaleDateString("en-IN")
+                                                            : "N/A"}
+                                                    </td>
+
+                                                    <td>
+                                                        {order.items?.length || 0} Items
+                                                    </td>
+
+                                                    <td>
+                                                        ₹{Number(
+                                                            order.totalAmount || order.grandTotal || 0
+                                                        ).toLocaleString("en-IN")}
+                                                    </td>
+
+                                                    <td>
+                                                        {order.paymentStatus || "N/A"}
+                                                    </td>
+
+                                                    <td>
+                                                        <span className="cancelled-orders-status">
+                                                            Cancelled
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -1523,9 +1904,194 @@ const OrderManagement = () => {
                             )}
                         </div>
 
+                        {/* FOOTER */}
+                        <div className="cancelled-orders-footer">
+                            <button
+                                type="button"
+                                onClick={() => setShowCancelledOrdersModal(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             )}
+
+            {/* TRACK ORDER MODAL */}
+            {showTrackOrderModal && (
+                <div className="track-order-overlay">
+                    <div className="track-order-modal">
+
+                        {/* HEADER */}
+                        <div className="track-order-header">
+                            <div>
+                                <h2>Track Order</h2>
+                                <p>Track order status and delivery progress.</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="track-order-close"
+                                onClick={() => setShowTrackOrderModal(false)}
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+
+                        {/* BODY */}
+                        <div className="track-order-content">
+
+                            <div className="track-order-select-group">
+                                <label>Select Order</label>
+
+                                <select
+                                    value={selectedTrackOrder}
+                                    onChange={(e) =>
+                                        setSelectedTrackOrder(e.target.value)
+                                    }
+                                >
+                                    <option value="">Select Order</option>
+
+                                    {orders.map((order) => (
+                                        <option key={order._id} value={order._id}>
+                                            {order.orderNumber} - {order.dealer?.name || "N/A"}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {trackOrder ? (
+                                <>
+                                    {/* ORDER INFORMATION */}
+                                    <div className="track-order-info">
+                                        <div className="track-order-info-item">
+                                            <span>Order Number</span>
+                                            <strong>{trackOrder.orderNumber}</strong>
+                                        </div>
+
+                                        <div className="track-order-info-item">
+                                            <span>Dealer Name</span>
+                                            <strong>{trackOrder.dealer?.name || "N/A"}</strong>
+                                        </div>
+
+                                        <div className="track-order-info-item">
+                                            <span>Order Date</span>
+                                            <strong>
+                                                {trackOrder.orderDate
+                                                    ? new Date(trackOrder.orderDate).toLocaleDateString("en-IN")
+                                                    : "N/A"}
+                                            </strong>
+                                        </div>
+
+                                        <div className="track-order-info-item">
+                                            <span>Order Amount</span>
+                                            <strong>
+                                                ₹{Number(trackOrder.totalAmount || 0).toLocaleString("en-IN")}
+                                            </strong>
+                                        </div>
+
+                                        <div className="track-order-info-item">
+                                            <span>Current Status</span>
+                                            <span className={getStatusClass(trackOrder.status)}>
+                                                {trackOrder.status}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* CANCELLED ORDER */}
+                                    {trackOrder.status === "Cancelled" ? (
+                                        <div className="track-order-cancelled">
+                                            <XCircle size={24} />
+                                            <div>
+                                                <strong>Order Cancelled</strong>
+                                                <p>This order has been cancelled.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* ORDER TIMELINE */
+                                        <div className="track-order-timeline-section">
+                                            <h3>Order Progress</h3>
+
+                                            {(() => {
+                                                const steps = [
+                                                    "New",
+                                                    "Processing",
+                                                    "Approved",
+                                                    "Dispatched",
+                                                    "Delivered",
+                                                ];
+
+                                                const currentIndex = steps.indexOf(trackOrder.status);
+
+                                                return (
+                                                    <div className="track-order-timeline">
+                                                        {steps.map((step, index) => {
+                                                            const completed = currentIndex >= index;
+                                                            const current = currentIndex === index;
+
+                                                            return (
+                                                                <div
+                                                                    key={step}
+                                                                    className={`track-order-step ${completed ? "is-completed" : ""
+                                                                        } ${current ? "is-current" : ""}`}
+                                                                >
+                                                                    <div className="track-order-step-marker">
+                                                                        {completed ? (
+                                                                            <CheckCircle size={19} />
+                                                                        ) : (
+                                                                            index + 1
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="track-order-step-info">
+                                                                        <strong>{step}</strong>
+                                                                        <span>
+                                                                            {current
+                                                                                ? "Current Status"
+                                                                                : completed
+                                                                                    ? "Completed"
+                                                                                    : "Pending"}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {index !== steps.length - 1 && (
+                                                                        <div className="track-order-step-line" />
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="track-order-empty">
+                                    <Navigation size={32} />
+                                    <strong>No Order Selected</strong>
+                                    <p>Select an order to view its tracking details.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* FOOTER */}
+                        <div className="track-order-footer">
+                            <button
+                                type="button"
+                                className="track-order-footer-close"
+                                onClick={() => setShowTrackOrderModal(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
 
             {/*                     CREATE ORDER MODAL                 */}
             {showCreateOrderModal && (
