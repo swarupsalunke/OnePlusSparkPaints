@@ -99,6 +99,8 @@ const EmployeeHRManagement = () => {
     const [payrollLoading, setPayrollLoading] = useState(false);
     const [payrollError, setPayrollError] = useState("");
 
+
+
     const [payrollForm, setPayrollForm] = useState({
         employeeId: "",
         month: String(new Date().getMonth() + 1),
@@ -109,6 +111,7 @@ const EmployeeHRManagement = () => {
     });
 
     const [payrollRecords, setPayrollRecords] = useState([]);
+    const [updatingPayrollId, setUpdatingPayrollId] = useState(null);
 
     const netSalary =
         (Number(payrollForm.basicSalary) || 0) +
@@ -969,6 +972,54 @@ const EmployeeHRManagement = () => {
             setPayrollError(err.message || "Failed to fetch payroll records");
         }
     };
+    // MARK PAYROLL AS PAID
+    const handleMarkPayrollPaid = async (record) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to mark ${record.employee?.name || "this employee"}'s payroll as PAID?`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setUpdatingPayrollId(record._id);
+
+            const response = await fetch(
+                `${PAYROLL_API}/${record._id}/status`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        paymentStatus: "PAID",
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to update payment status");
+            }
+
+            setSuccessMessage(data.message || "Payment status updated successfully");
+
+            await fetchPayrollRecords(record.month, record.year);
+        } catch (err) {
+            console.error("Update payroll status error:", err);
+            setError(err.message || "Failed to update payment status");
+        } finally {
+            setUpdatingPayrollId(null);
+        }
+    };
+
+    // FETCH CURRENT MONTH PAYROLL RECORDS
+    useEffect(() => {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+
+        fetchPayrollRecords(currentMonth, currentYear);
+    }, []);
 
     const handleSubmitPayroll = async (event) => {
         event.preventDefault();
@@ -1493,6 +1544,115 @@ const EmployeeHRManagement = () => {
                                 <ChevronRight size={15} />
                             </button>
                         </div>
+                    </div>
+                </section>
+
+                {/* ===================================================
+    PAYROLL RECORDS
+=================================================== */}
+
+                <section className="dashboard-card payroll-records-card">
+                    <div className="table-card-headings">
+                        <div>
+                            <h3>Payroll Records</h3>
+                            <span>Employee salary and payment status</span>
+                        </div>
+                    </div>
+
+                    <div className="payroll-table-wrapper">
+                        <table className="payroll-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Month / Year</th>
+                                    <th>Basic Salary</th>
+                                    <th>Allowances</th>
+                                    <th>Deductions</th>
+                                    <th>Net Salary</th>
+                                    <th>Payment Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {payrollLoading ? (
+                                    <tr>
+                                        <td colSpan="7" className="payroll-empty">
+                                            Loading payroll records...
+                                        </td>
+                                    </tr>
+                                ) : payrollRecords.length > 0 ? (
+                                    payrollRecords.map((record) => (
+                                        <tr key={record._id}>
+                                            <td>
+                                                <div className="payroll-employee-info">
+                                                    <strong>
+                                                        {record.employee?.name || "N/A"}
+                                                    </strong>
+                                                    <small>
+                                                        {record.employee?.employeeId || "N/A"}
+                                                    </small>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                {new Date(
+                                                    Number(record.year),
+                                                    Number(record.month) - 1
+                                                ).toLocaleString("en-IN", {
+                                                    month: "short",
+                                                    year: "numeric",
+                                                })}
+                                            </td>
+
+                                            <td>₹{Number(record.basicSalary || 0).toLocaleString("en-IN")}</td>
+                                            <td>₹{Number(record.allowances || 0).toLocaleString("en-IN")}</td>
+                                            <td>₹{Number(record.deductions || 0).toLocaleString("en-IN")}</td>
+                                            <td className="payroll-net-amount">
+                                                ₹{Number(record.netSalary || 0).toLocaleString("en-IN")}
+                                            </td>
+
+                                            <td>
+                                                <span
+                                                    className={`payroll-status ${record.paymentStatus === "PAID"
+                                                        ? "paid"
+                                                        : "pending"
+                                                        }`}
+                                                >
+                                                    {record.paymentStatus || "PENDING"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {record.paymentStatus === "PENDING" ? (
+                                                    <button
+                                                        type="button"
+                                                        className="payroll-mark-paid-btn"
+                                                        onClick={() => handleMarkPayrollPaid(record)}
+                                                        disabled={updatingPayrollId === record._id}
+                                                    >
+                                                        {updatingPayrollId === record._id
+                                                            ? "Updating..."
+                                                            : "Mark as Paid"}
+                                                    </button>
+                                                ) : (
+                                                    <span className="payroll-paid-label">
+                                                        <BadgeCheck size={14} />
+                                                        Paid
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="8" className="payroll-empty">
+                                            No payroll records found.
+                                        </td>
+
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
