@@ -36,6 +36,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 const EMPLOYEE_API = `${API_BASE_URL}/api/hr/employees`;
 const LEAVE_API = `${API_BASE_URL}/api/leaves`;
+const ATTENDANCE_API = `${API_BASE_URL}/api/hr/attendance`;
 
 const PAGE_SIZE = 10;
 
@@ -65,6 +66,32 @@ const DEPARTMENT_COLORS = [
 const EmployeeHRManagement = () => {
     const [employees, setEmployees] = useState([]);
     const [leaves, setLeaves] = useState([]);
+
+    const [attendanceRecords, setAttendanceRecords] = useState([]);
+    const [attendanceLoading, setAttendanceLoading] = useState(false);
+
+    const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+    const [savingAttendance, setSavingAttendance] = useState(false);
+
+    const getTodayDate = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    };
+
+    const [attendanceForm, setAttendanceForm] = useState({
+        employee: "",
+        date: getTodayDate(),
+        status: "PRESENT",
+        checkIn: "",
+        checkOut: "",
+        remarks: "",
+    });
+
+    const [attendanceError, setAttendanceError] = useState("");
 
     const [loading, setLoading] = useState(true);
     const [leaveLoading, setLeaveLoading] = useState(false);
@@ -143,9 +170,33 @@ const EmployeeHRManagement = () => {
         }
     };
 
+    const fetchAttendance = async (date = getTodayDate()) => {
+        try {
+            setAttendanceLoading(true);
+
+            const response = await fetch(
+                `${ATTENDANCE_API}?date=${date}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch attendance");
+            }
+
+            setAttendanceRecords(data.data || []);
+        } catch (err) {
+            console.error("Fetch attendance error:", err);
+            setError(err.message || "Failed to load attendance");
+        } finally {
+            setAttendanceLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchEmployees();
         fetchLeaves();
+        fetchAttendance();
     }, []);
 
     /* =========================================================
@@ -384,8 +435,12 @@ const EmployeeHRManagement = () => {
 
     const attendanceSummary = {
         total: employees.length,
-        present: null,
-        absent: null,
+        present: attendanceRecords.filter(
+            (item) => ["PRESENT", "HALF_DAY"].includes(item.status)
+        ).length,
+        absent: attendanceRecords.filter(
+            (item) => item.status === "ABSENT"
+        ).length,
         onLeave: statistics.onLeave,
     };
 
@@ -732,6 +787,82 @@ const EmployeeHRManagement = () => {
         alert("Bulk employee import API is not available in the current backend.");
     };
 
+    const openAttendanceModal = () => {
+        const activeEmployee = employees.find(
+            (employee) => employee.status === "ACTIVE"
+        );
+
+        setAttendanceForm({
+            employee: activeEmployee?._id || "",
+            date: getTodayDate(),
+            status: "PRESENT",
+            checkIn: "",
+            checkOut: "",
+            remarks: "",
+        });
+
+        setAttendanceError("");
+        setShowAttendanceModal(true);
+    };
+
+    const handleAttendanceInput = (event) => {
+        const { name, value } = event.target;
+
+        setAttendanceForm((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+
+        setAttendanceError("");
+    };
+
+    const handleSubmitAttendance = async (event) => {
+        event.preventDefault();
+
+        if (!attendanceForm.employee) {
+            setAttendanceError("Please select an employee.");
+            return;
+        }
+
+        if (!attendanceForm.date) {
+            setAttendanceError("Please select attendance date.");
+            return;
+        }
+
+        try {
+            setSavingAttendance(true);
+            setAttendanceError("");
+
+            const response = await fetch(ATTENDANCE_API, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(attendanceForm),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to save attendance");
+            }
+
+            setShowAttendanceModal(false);
+
+            setSuccessMessage(
+                data.message || "Attendance saved successfully"
+            );
+
+            await fetchAttendance(attendanceForm.date);
+        } catch (err) {
+            console.error("Save attendance error:", err);
+            setAttendanceError(err.message || "Failed to save attendance");
+        } finally {
+            setSavingAttendance(false);
+        }
+    };
+
+
     /* =========================================================
        QUICK ACTIONS
     ========================================================= */
@@ -747,6 +878,11 @@ const EmployeeHRManagement = () => {
                 behavior: "smooth",
                 block: "center",
             });
+            return;
+        }
+
+        if (action === "attendance") {
+            openAttendanceModal();
             return;
         }
 
@@ -859,7 +995,7 @@ const EmployeeHRManagement = () => {
                         <div className="stat-content">
                             <span>Presentees Today</span>
                             <strong>{attendanceSummary.present ?? "-"}</strong>
-                            <small className="muted-change">Attendance API unavailable</small>
+                            <small className="muted-change">Today's attendance records</small>
                         </div>
                     </div>
 
@@ -1355,6 +1491,12 @@ const EmployeeHRManagement = () => {
                             <strong>{attendanceSummary.total}</strong>
                         </div>
 
+                        <div className="attendance-note">
+                            {attendanceLoading
+                                ? "Loading attendance..."
+                                : "Attendance records updated from the database."}
+                        </div>
+
                         <div className="attendance-list">
                             <div className="attendance-row">
                                 <span>
@@ -1554,6 +1696,164 @@ const EmployeeHRManagement = () => {
                     </div>
                 </section> */}
             </main>
+
+
+            {/* MARK ATTENDANCE MODAL */}
+
+            {showAttendanceModal && (
+                <div
+                    className="modal-overlay"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget && !savingAttendance) {
+                            setShowAttendanceModal(false);
+                        }
+                    }}
+                >
+                    <div className="employee-modal">
+                        <div className="modal-header">
+                            <div>
+                                <h2>Mark Attendance</h2>
+                                <p>Record employee daily attendance</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="modal-close-button"
+                                onClick={() => setShowAttendanceModal(false)}
+                                disabled={savingAttendance}
+                            >
+                                <X size={19} />
+                            </button>
+                        </div>
+
+                        <form
+                            className="employee-form"
+                            onSubmit={handleSubmitAttendance}
+                        >
+                            <div className="form-grid">
+                                <div className="form-group">
+                                    <label>Employee <span>*</span></label>
+                                    <div className="form-select-wrapper">
+                                        <select
+                                            name="employee"
+                                            value={attendanceForm.employee}
+                                            onChange={handleAttendanceInput}
+                                        >
+                                            <option value="">Select Employee</option>
+
+                                            {employees
+                                                .filter((employee) => employee.status === "ACTIVE")
+                                                .map((employee) => (
+                                                    <option
+                                                        key={employee._id}
+                                                        value={employee._id}
+                                                    >
+                                                        {employee.employeeId} - {employee.name}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        <ChevronDown size={16} />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Date <span>*</span></label>
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={attendanceForm.date}
+                                        onChange={handleAttendanceInput}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Attendance Status <span>*</span></label>
+                                    <div className="form-select-wrapper">
+                                        <select
+                                            name="status"
+                                            value={attendanceForm.status}
+                                            onChange={handleAttendanceInput}
+                                        >
+                                            <option value="PRESENT">Present</option>
+                                            <option value="ABSENT">Absent</option>
+                                            <option value="HALF_DAY">Half Day</option>
+                                        </select>
+                                        <ChevronDown size={16} />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Check In</label>
+                                    <input
+                                        type="time"
+                                        name="checkIn"
+                                        value={attendanceForm.checkIn}
+                                        onChange={handleAttendanceInput}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Check Out</label>
+                                    <input
+                                        type="time"
+                                        name="checkOut"
+                                        value={attendanceForm.checkOut}
+                                        onChange={handleAttendanceInput}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Remarks</label>
+                                    <input
+                                        type="text"
+                                        name="remarks"
+                                        value={attendanceForm.remarks}
+                                        onChange={handleAttendanceInput}
+                                        placeholder="Enter remarks"
+                                    />
+                                </div>
+                            </div>
+
+                            {attendanceError && (
+                                <div className="form-error">
+                                    <AlertCircle size={17} />
+                                    <span>{attendanceError}</span>
+                                </div>
+                            )}
+
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="cancel-button"
+                                    onClick={() => setShowAttendanceModal(false)}
+                                    disabled={savingAttendance}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="save-employee-button"
+                                    disabled={savingAttendance}
+                                >
+                                    {savingAttendance ? (
+                                        <>
+                                            <span className="button-spinner" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save size={17} />
+                                            Save Attendance
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
             {/* =====================================================
           ADD / EDIT EMPLOYEE MODAL (shared)
