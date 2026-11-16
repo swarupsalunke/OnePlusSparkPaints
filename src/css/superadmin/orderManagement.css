@@ -3315,3 +3315,41 @@
         padding: 14px 16px;
     }
 }
+
+.order-report-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.order-report-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #f07824;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.order-report-download:hover {
+    background: #d96312;
+}
+
+.order-report-download:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .order-report-toolbar-actions {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+}

@@ -184,6 +184,56 @@ const OrderManagement = () => {
         setShowOrderReportModal(true);
     };
 
+
+    const downloadOrderReportCSV = () => {
+        const headers = [
+            "Order Number",
+            "Dealer",
+            "Order Date",
+            "Products",
+            "Total Amount",
+            "Payment Status",
+            "Order Status",
+        ];
+
+        const rows = filteredOrderReport.map((order) => [
+            order.orderNumber || "N/A",
+            order.dealer?.name || "N/A",
+            order.createdAt
+                ? new Date(order.createdAt).toLocaleDateString("en-IN")
+                : "N/A",
+            order.items?.length || 0,
+            Number(order.totalAmount || order.grandTotal || 0),
+            order.paymentStatus || "N/A",
+            order.status || "N/A",
+        ]);
+
+        const escapeCSV = (value) =>
+            `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+        const csvContent = [
+            headers.map(escapeCSV).join(","),
+            ...rows.map((row) => row.map(escapeCSV).join(",")),
+        ].join("\n");
+
+        const blob = new Blob(["\uFEFF" + csvContent], {
+            type: "text/csv;charset=utf-8;",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = `Order_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+    };
+
+
     // FILTER ORDER REPORT
     const filteredOrderReport = orders.filter((order) => {
         const searchValue = orderReportSearch.toLowerCase().trim();
@@ -1711,6 +1761,7 @@ const OrderManagement = () => {
                             </div>
 
                             {/* SEARCH */}
+
                             <div className="order-report-toolbar">
                                 <input
                                     type="text"
@@ -1719,9 +1770,21 @@ const OrderManagement = () => {
                                     onChange={(e) => setOrderReportSearch(e.target.value)}
                                 />
 
-                                <span className="order-report-count">
-                                    {filteredOrderReport.length} Orders
-                                </span>
+                                <div className="order-report-toolbar-actions">
+                                    <span className="order-report-count">
+                                        {filteredOrderReport.length} Orders
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        className="order-report-download"
+                                        onClick={downloadOrderReportCSV}
+                                        disabled={filteredOrderReport.length === 0}
+                                    >
+                                        <Download size={16} />
+                                        Download CSV
+                                    </button>
+                                </div>
                             </div>
 
                             {/* REPORT TABLE */}
