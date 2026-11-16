@@ -223,6 +223,26 @@ const OrderManagement = () => {
             setCreatingReturn(false);
         }
     };
+
+    // UPDATE ORDER RETURN STATUS
+    const handleUpdateReturnStatus = async (id, field, value) => {
+        try {
+            const token = localStorage.getItem("token");
+
+            await axios.patch(
+                `https://oneplussparkpaintsserver.onrender.com/api/order-returns/${id}/status`,
+                { [field]: value },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            await fetchOrderReturns();
+        } catch (error) {
+            console.error("Update return status error:", error);
+            alert(error.response?.data?.message || "Failed to update return status");
+        }
+    };
     //     
     // FETCH USERS (Dealers + Sales Executives come from User Management)
     //     
@@ -1459,8 +1479,40 @@ const OrderManagement = () => {
                                                         ₹{Number(item.returnAmount || 0).toLocaleString("en-IN")}
                                                     </td>
                                                     <td>{item.returnReason}</td>
-                                                    <td>{item.returnStatus}</td>
-                                                    <td>{item.refundStatus}</td>
+                                                    <td>
+                                                        <select
+                                                            value={item.returnStatus}
+                                                            onChange={(e) =>
+                                                                handleUpdateReturnStatus(
+                                                                    item._id,
+                                                                    "returnStatus",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        >
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Approved">Approved</option>
+                                                            <option value="Rejected">Rejected</option>
+                                                            <option value="Completed">Completed</option>
+                                                        </select>
+                                                    </td>
+
+                                                    <td>
+                                                        <select
+                                                            value={item.refundStatus}
+                                                            onChange={(e) =>
+                                                                handleUpdateReturnStatus(
+                                                                    item._id,
+                                                                    "refundStatus",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        >
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Refunded">Refunded</option>
+                                                            <option value="Not Applicable">Not Applicable</option>
+                                                        </select>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
