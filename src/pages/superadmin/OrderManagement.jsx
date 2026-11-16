@@ -136,8 +136,8 @@ const OrderManagement = () => {
             );
 
             setOrderReturns(
-                Array.isArray(response.data.orderReturns)
-                    ? response.data.orderReturns
+                Array.isArray(response.data.returns)
+                    ? response.data.returns
                     : []
             );
         } catch (error) {
