@@ -1335,10 +1335,10 @@ const SchemeManagement = () => {
                 <span>Scheme Report</span>
               </button>
 
-              <button onClick={handleQuickPerformance}>
+              {/* <button onClick={handleQuickPerformance}>
                 <BarChart3 size={19} />
                 <span>Performance Report</span>
-              </button>
+              </button> */}
 
               <button onClick={handleQuickExpired}>
                 <Clock3 size={19} />

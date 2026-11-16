@@ -1642,7 +1642,7 @@ export default function CommissionManagement() {
                             Calculate Commission
                         </button>
 
-                        <button onClick={handleQuickCalculate}>
+                        {/* <button onClick={handleQuickCalculate}>
                             <Building2 size={17} />
                             Calculate Dealer Rewards
                         </button>
@@ -1655,7 +1655,7 @@ export default function CommissionManagement() {
                         <button onClick={handleQuickCalculate}>
                             <UserPlus size={17} />
                             Calculate Referral Incentive
-                        </button>
+                        </button> */}
 
                         <button onClick={handleQuickApprove}>
                             <CheckCircle size={17} />

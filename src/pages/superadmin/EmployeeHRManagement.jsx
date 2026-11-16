@@ -1533,7 +1533,7 @@ const EmployeeHRManagement = () => {
                                 <ChevronRight size={15} />
                             </button>
 
-                            <button type="button" className="quick-action-items" onClick={() => handleQuickAction("performance")}>
+                            {/* <button type="button" className="quick-action-items" onClick={() => handleQuickAction("performance")}>
                                 <span className="quick-action-icons">
                                     <Award size={18} />
                                 </span>
@@ -1542,14 +1542,12 @@ const EmployeeHRManagement = () => {
                                     <small>Conduct performance review</small>
                                 </span>
                                 <ChevronRight size={15} />
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </section>
 
-                {/* ===================================================
-    PAYROLL RECORDS
-=================================================== */}
+                {/* ========    PAYROLL RECORDS     ========== */}
 
                 <section className="dashboard-card payroll-records-card">
                     <div className="table-card-headings">
