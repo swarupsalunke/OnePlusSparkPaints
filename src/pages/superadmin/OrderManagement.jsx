@@ -69,6 +69,20 @@ const OrderManagement = () => {
 
     //     
     // VIEW ORDER STATE
+
+    // ORDER RETURNS STATE
+    const [showReturnsModal, setShowReturnsModal] = useState(false);
+    const [orderReturns, setOrderReturns] = useState([]);
+    const [returnsLoading, setReturnsLoading] = useState(false);
+    const [creatingReturn, setCreatingReturn] = useState(false);
+
+    const [returnForm, setReturnForm] = useState({
+        order: "",
+        product: "",
+        quantity: 1,
+        returnReason: "",
+        remarks: "",
+    });
     //     
     const [viewOrder, setViewOrder] = useState(null);
 
@@ -107,6 +121,108 @@ const OrderManagement = () => {
         }
     };
 
+    // FETCH ORDER RETURNS
+    const fetchOrderReturns = async () => {
+        try {
+            setReturnsLoading(true);
+
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                "https://oneplussparkpaintsserver.onrender.com/api/order-returns",
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            setOrderReturns(
+                Array.isArray(response.data.orderReturns)
+                    ? response.data.orderReturns
+                    : []
+            );
+        } catch (error) {
+            console.error("Fetch order returns error:", error);
+            setOrderReturns([]);
+        } finally {
+            setReturnsLoading(false);
+        }
+    };
+
+    // OPEN ORDER RETURNS
+    const openReturnsModal = () => {
+        setShowReturnsModal(true);
+        fetchOrderReturns();
+    };
+
+    // HANDLE RETURN FORM CHANGE
+    const handleReturnFormChange = (e) => {
+        const { name, value } = e.target;
+
+        setReturnForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    // SELECTED RETURN ORDER
+    const selectedReturnOrder = orders.find(
+        (order) => order._id === returnForm.order
+    );
+
+    // CREATE ORDER RETURN
+    const handleCreateReturn = async (e) => {
+        e.preventDefault();
+
+        if (!returnForm.order) return alert("Please select order");
+        if (!returnForm.product) return alert("Please select product");
+        if (!returnForm.quantity || Number(returnForm.quantity) < 1)
+            return alert("Please enter valid quantity");
+        if (!returnForm.returnReason.trim())
+            return alert("Please enter return reason");
+
+        try {
+            setCreatingReturn(true);
+
+            const token = localStorage.getItem("token");
+
+            const payload = {
+                order: returnForm.order,
+                items: [
+                    {
+                        product: returnForm.product,
+                        quantity: Number(returnForm.quantity),
+                    },
+                ],
+                returnReason: returnForm.returnReason,
+                remarks: returnForm.remarks,
+            };
+
+            await axios.post(
+                "https://oneplussparkpaintsserver.onrender.com/api/order-returns",
+                payload,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            alert("Order return created successfully");
+
+            setReturnForm({
+                order: "",
+                product: "",
+                quantity: 1,
+                returnReason: "",
+                remarks: "",
+            });
+
+            await fetchOrderReturns();
+        } catch (error) {
+            console.error("Create order return error:", error);
+            alert(error.response?.data?.message || "Failed to create order return");
+        } finally {
+            setCreatingReturn(false);
+        }
+    };
     //     
     // FETCH USERS (Dealers + Sales Executives come from User Management)
     //     
@@ -1123,7 +1239,11 @@ const OrderManagement = () => {
                             <span>Create Order</span>
                         </button>
 
-                        <button type="button" className="quick-action-btn">
+                        <button
+                            type="button"
+                            className="quick-action-btn"
+                            onClick={openReturnsModal}
+                        >
                             <Undo2 size={18} />
                             <span>Order Returns</span>
                         </button>
@@ -1150,6 +1270,208 @@ const OrderManagement = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ORDER RETURNS MODAL */}
+            {showReturnsModal && (
+                <div className="order-modal-overlay">
+                    <div className="order-create-modal order-returns-modal">
+
+                        <div className="order-modal-header">
+                            <div>
+                                <h2>Order Returns</h2>
+                                <p>Manage and create order returns.</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="order-modal-close"
+                                onClick={() => setShowReturnsModal(false)}
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+
+                        {/* CREATE RETURN FORM */}
+                        <form
+                            className="order-create-form"
+                            onSubmit={handleCreateReturn}
+                        >
+                            <h3>Create Order Return</h3>
+
+                            <div className="order-form-grid">
+
+                                <div className="order-form-group">
+                                    <label>Select Order</label>
+                                    <select
+                                        name="order"
+                                        value={returnForm.order}
+                                        onChange={(e) => {
+                                            handleReturnFormChange(e);
+                                            setReturnForm((prev) => ({
+                                                ...prev,
+                                                order: e.target.value,
+                                                product: "",
+                                                quantity: 1,
+                                            }));
+                                        }}
+                                    >
+                                        <option value="">Select Order</option>
+
+                                        {orders
+                                            .filter((order) => order.status !== "Cancelled")
+                                            .map((order) => (
+                                                <option key={order._id} value={order._id}>
+                                                    {order.orderNumber} - {order.dealer?.name || "N/A"}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+
+                                <div className="order-form-group">
+                                    <label>Select Product</label>
+                                    <select
+                                        name="product"
+                                        value={returnForm.product}
+                                        onChange={handleReturnFormChange}
+                                        disabled={!selectedReturnOrder}
+                                    >
+                                        <option value="">Select Product</option>
+
+                                        {selectedReturnOrder?.items?.map((item, index) => (
+                                            <option
+                                                key={item._id || index}
+                                                value={item.product?._id || item.product}
+                                            >
+                                                {item.product?.productName ||
+                                                    item.product?.name ||
+                                                    item.product?.sku ||
+                                                    "Product"}
+                                                {" - Qty: "}{item.quantity}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="order-form-group">
+                                    <label>Return Quantity</label>
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        min="1"
+                                        max={
+                                            selectedReturnOrder?.items?.find(
+                                                (item) =>
+                                                    String(item.product?._id || item.product) ===
+                                                    returnForm.product
+                                            )?.quantity || 1
+                                        }
+                                        value={returnForm.quantity}
+                                        onChange={handleReturnFormChange}
+                                    />
+                                </div>
+
+                                <div className="order-form-group">
+                                    <label>Return Reason</label>
+                                    <select
+                                        name="returnReason"
+                                        value={returnForm.returnReason}
+                                        onChange={handleReturnFormChange}
+                                    >
+                                        <option value="">Select Reason</option>
+                                        <option value="Damaged product">Damaged Product</option>
+                                        <option value="Wrong product">Wrong Product</option>
+                                        <option value="Quality issue">Quality Issue</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div className="order-form-group full-width">
+                                    <label>Remarks</label>
+                                    <textarea
+                                        name="remarks"
+                                        rows="3"
+                                        placeholder="Enter remarks..."
+                                        value={returnForm.remarks}
+                                        onChange={handleReturnFormChange}
+                                    />
+                                </div>
+
+                            </div>
+
+                            <div className="order-modal-footer">
+                                <button
+                                    type="submit"
+                                    className="order-modal-submit"
+                                    disabled={creatingReturn}
+                                >
+                                    {creatingReturn ? "Submitting..." : "Create Return"}
+                                </button>
+                            </div>
+                        </form>
+
+                        {/* RETURNS LIST */}
+                        <div className="order-returns-list">
+                            <h3>Return History</h3>
+
+                            {returnsLoading ? (
+                                <p>Loading returns...</p>
+                            ) : orderReturns.length === 0 ? (
+                                <p>No order returns found.</p>
+                            ) : (
+                                <div className="order-table-wrapper">
+                                    <table className="order-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order No.</th>
+                                                <th>Dealer</th>
+                                                <th>Product</th>
+                                                <th>Quantity</th>
+                                                <th>Return Amount</th>
+                                                <th>Reason</th>
+                                                <th>Return Status</th>
+                                                <th>Refund Status</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {orderReturns.map((item) => (
+                                                <tr key={item._id}>
+                                                    <td>{item.order?.orderNumber || "N/A"}</td>
+                                                    <td>{item.dealer?.name || "N/A"}</td>
+                                                    <td>
+                                                        {item.items?.map((product) => (
+                                                            <div key={product._id}>
+                                                                {product.product?.name ||
+                                                                    product.product?.productName ||
+                                                                    product.product?.sku ||
+                                                                    "Product"}
+                                                            </div>
+                                                        ))}
+                                                    </td>
+                                                    <td>
+                                                        {item.items?.reduce(
+                                                            (total, product) =>
+                                                                total + Number(product.quantity || 0),
+                                                            0
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        ₹{Number(item.returnAmount || 0).toLocaleString("en-IN")}
+                                                    </td>
+                                                    <td>{item.returnReason}</td>
+                                                    <td>{item.returnStatus}</td>
+                                                    <td>{item.refundStatus}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
             {/*                     CREATE ORDER MODAL                 */}
             {showCreateOrderModal && (
