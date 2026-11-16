@@ -1481,6 +1481,7 @@ const OrderManagement = () => {
                                                     <td>{item.returnReason}</td>
                                                     <td>
                                                         <select
+                                                          className="return-status-select"
                                                             value={item.returnStatus}
                                                             onChange={(e) =>
                                                                 handleUpdateReturnStatus(
@@ -1499,6 +1500,7 @@ const OrderManagement = () => {
 
                                                     <td>
                                                         <select
+                                                          className="return-status-select"
                                                             value={item.refundStatus}
                                                             onChange={(e) =>
                                                                 handleUpdateReturnStatus(

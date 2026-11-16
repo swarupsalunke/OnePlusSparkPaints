@@ -2006,3 +2006,44 @@
     }
 
 }
+
+
+/* ORDER RETURN STATUS DROPDOWNS */
+
+.return-status-select {
+    width: 135px;
+    min-width: 125px;
+    height: 36px;
+    padding: 0 32px 0 12px;
+    border: 1px solid #dce3ed;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #263449;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.return-status-select:hover {
+    border-color: #f07824;
+}
+
+.return-status-select:focus {
+    border-color: #f07824;
+    box-shadow: 0 0 0 3px rgba(240, 120, 36, 0.12);
+}
+
+.return-status-select option {
+    padding: 10px;
+    background: #ffffff;
+    color: #263449;
+    font-size: 13px;
+}
+
+.return-status-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
