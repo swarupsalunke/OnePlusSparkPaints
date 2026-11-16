@@ -37,6 +37,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 const EMPLOYEE_API = `${API_BASE_URL}/api/hr/employees`;
 const LEAVE_API = `${API_BASE_URL}/api/leaves`;
 const ATTENDANCE_API = `${API_BASE_URL}/api/hr/attendance`;
+const PAYROLL_API = `${API_BASE_URL}/api/hr/payroll`;
 
 const PAGE_SIZE = 10;
 
@@ -92,6 +93,27 @@ const EmployeeHRManagement = () => {
     });
 
     const [attendanceError, setAttendanceError] = useState("");
+    // PAYROLL STATES
+    const [showPayrollModal, setShowPayrollModal] = useState(false);
+    const [savingPayroll, setSavingPayroll] = useState(false);
+    const [payrollLoading, setPayrollLoading] = useState(false);
+    const [payrollError, setPayrollError] = useState("");
+
+    const [payrollForm, setPayrollForm] = useState({
+        employeeId: "",
+        month: String(new Date().getMonth() + 1),
+        year: String(new Date().getFullYear()),
+        basicSalary: "",
+        allowances: "0",
+        deductions: "0",
+    });
+
+    const [payrollRecords, setPayrollRecords] = useState([]);
+
+    const netSalary =
+        (Number(payrollForm.basicSalary) || 0) +
+        (Number(payrollForm.allowances) || 0) -
+        (Number(payrollForm.deductions) || 0);
 
     const [loading, setLoading] = useState(true);
     const [leaveLoading, setLeaveLoading] = useState(false);
@@ -861,6 +883,155 @@ const EmployeeHRManagement = () => {
             setSavingAttendance(false);
         }
     };
+    const fetchEmployeeSalary = async (employeeId) => {
+        if (!employeeId) {
+            setPayrollForm((previous) => ({
+                ...previous,
+                employeeId: "",
+                basicSalary: "",
+                allowances: "0",
+                deductions: "0",
+            }));
+            return;
+        }
+
+        try {
+            setPayrollLoading(true);
+            setPayrollError("");
+
+            const response = await fetch(
+                `${PAYROLL_API}/salary/${employeeId}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch salary");
+            }
+
+            const salary = data.salary;
+
+            setPayrollForm((previous) => ({
+                ...previous,
+                employeeId,
+                basicSalary: salary ? String(salary.basicSalary) : "",
+                allowances: salary ? String(salary.allowances) : "0",
+                deductions: salary ? String(salary.deductions) : "0",
+            }));
+        } catch (err) {
+            console.error("Fetch salary error:", err);
+            setPayrollError(err.message || "Failed to fetch salary");
+        } finally {
+            setPayrollLoading(false);
+        }
+    };
+
+    const handlePayrollInput = (event) => {
+        const { name, value } = event.target;
+
+        setPayrollForm((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+
+        setPayrollError("");
+    };
+
+    const openPayrollModal = () => {
+        setPayrollForm({
+            employeeId: "",
+            month: String(new Date().getMonth() + 1),
+            year: String(new Date().getFullYear()),
+            basicSalary: "",
+            allowances: "0",
+            deductions: "0",
+        });
+
+        setPayrollError("");
+        setShowPayrollModal(true);
+    };
+
+    const fetchPayrollRecords = async (month, year) => {
+        try {
+            const response = await fetch(
+                `${PAYROLL_API}?month=${month}&year=${year}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch payroll records");
+            }
+
+            setPayrollRecords(data.payrolls || []);
+        } catch (err) {
+            console.error("Fetch payroll records error:", err);
+            setPayrollError(err.message || "Failed to fetch payroll records");
+        }
+    };
+
+    const handleSubmitPayroll = async (event) => {
+        event.preventDefault();
+
+        if (!payrollForm.employeeId) {
+            setPayrollError("Please select an employee.");
+            return;
+        }
+
+        if (payrollForm.basicSalary === "" || Number(payrollForm.basicSalary) < 0) {
+            setPayrollError("Please enter a valid basic salary.");
+            return;
+        }
+
+        if (netSalary < 0) {
+            setPayrollError("Deductions cannot exceed gross salary.");
+            return;
+        }
+
+        try {
+            setSavingPayroll(true);
+            setPayrollError("");
+
+            const payload = {
+                employeeId: payrollForm.employeeId,
+                month: Number(payrollForm.month),
+                year: Number(payrollForm.year),
+                basicSalary: Number(payrollForm.basicSalary),
+                allowances: Number(payrollForm.allowances),
+                deductions: Number(payrollForm.deductions),
+            };
+
+            const response = await fetch(`${PAYROLL_API}/process`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to process payroll");
+            }
+
+            setShowPayrollModal(false);
+
+            setSuccessMessage(
+                data.message || "Payroll processed successfully"
+            );
+
+            await fetchPayrollRecords(
+                payrollForm.month,
+                payrollForm.year
+            );
+        } catch (err) {
+            console.error("Process payroll error:", err);
+            setPayrollError(err.message || "Failed to process payroll");
+        } finally {
+            setSavingPayroll(false);
+        }
+    };
 
 
     /* =========================================================
@@ -883,6 +1054,11 @@ const EmployeeHRManagement = () => {
 
         if (action === "attendance") {
             openAttendanceModal();
+            return;
+        }
+
+        if (action === "payroll") {
+            openPayrollModal();
             return;
         }
 
@@ -1853,6 +2029,174 @@ const EmployeeHRManagement = () => {
                     </div>
                 </div>
             )}
+
+            {/* PAYROLL PROCESS MODAL */}
+{showPayrollModal && (
+    <div className="modal-overlay">
+        <div className="employee-modal">
+            <div className="modal-header">
+                <div>
+                    <h2>Process Payroll</h2>
+                    <p>Enter employee salary details</p>
+                </div>
+                <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setShowPayrollModal(false)}
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <form onSubmit={handleSubmitPayroll}>
+                <div className="employee-form">
+                    <div className="form-grid">
+
+                        <div className="form-group">
+                            <label>Employee *</label>
+                            <div className="form-select-wrapper">
+                                <select
+                                    name="employeeId"
+                                    value={payrollForm.employeeId}
+                                    onChange={(e) =>
+                                        fetchEmployeeSalary(e.target.value)
+                                    }
+                                    required
+                                >
+                                    <option value="">Select Employee</option>
+                                    {employees
+                                        .filter((emp) => emp.status === "Active")
+                                        .map((emp) => (
+                                            <option
+                                                key={emp._id}
+                                                value={emp._id}
+                                            >
+                                                {emp.name} ({emp.employeeId})
+                                            </option>
+                                        ))}
+                                </select>
+                                <ChevronDown size={16} />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Month *</label>
+                            <div className="form-select-wrapper">
+                                <select
+                                    name="month"
+                                    value={payrollForm.month}
+                                    onChange={handlePayrollInput}
+                                    required
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {new Date(2000, i).toLocaleString(
+                                                "en-IN",
+                                                { month: "long" }
+                                            )}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown size={16} />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Year *</label>
+                            <input
+                                type="number"
+                                name="year"
+                                min="2020"
+                                value={payrollForm.year}
+                                onChange={handlePayrollInput}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Basic Salary (₹) *</label>
+                            <input
+                                type="number"
+                                name="basicSalary"
+                                min="0"
+                                step="0.01"
+                                value={payrollForm.basicSalary}
+                                onChange={handlePayrollInput}
+                                placeholder="Enter basic salary"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Allowances (₹)</label>
+                            <input
+                                type="number"
+                                name="allowances"
+                                min="0"
+                                step="0.01"
+                                value={payrollForm.allowances}
+                                onChange={handlePayrollInput}
+                                placeholder="Enter allowances"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Deductions (₹)</label>
+                            <input
+                                type="number"
+                                name="deductions"
+                                min="0"
+                                step="0.01"
+                                value={payrollForm.deductions}
+                                onChange={handlePayrollInput}
+                                placeholder="Enter deductions"
+                            />
+                        </div>
+
+                    </div>
+
+                    {payrollLoading && (
+                        <p>Fetching saved salary details...</p>
+                    )}
+
+                    <div className="payroll-net-salary">
+                        <span>Net Salary</span>
+                        <strong>
+                            ₹{netSalary.toLocaleString("en-IN")}
+                        </strong>
+                    </div>
+
+                    {payrollError && (
+                        <div className="form-error">
+                            <AlertCircle size={17} />
+                            <span>{payrollError}</span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="modal-footer">
+                    <button
+                        type="button"
+                        className="cancel-button"
+                        onClick={() => setShowPayrollModal(false)}
+                        disabled={savingPayroll}
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        className="save-employee-button"
+                        disabled={savingPayroll || payrollLoading}
+                    >
+                        <Save size={17} />
+                        {savingPayroll ? "Processing..." : "Process Payroll"}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
 
 
             {/* =====================================================

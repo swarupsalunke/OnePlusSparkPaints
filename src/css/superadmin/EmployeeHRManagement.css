@@ -2160,3 +2160,25 @@
     }
 
 }
+.payroll-net-salary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #fff3e8;
+    border: 1px solid #f8d8bd;
+    border-radius: 10px;
+}
+
+.payroll-net-salary span {
+    color: #263449;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.payroll-net-salary strong {
+    color: #d96312;
+    font-size: 21px;
+    font-weight: 700;
+}
