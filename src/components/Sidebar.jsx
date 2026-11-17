@@ -77,6 +77,7 @@ const Sidebar = () => {
     "/dashboard": "Dashboard",
     "/users": "User Management",
     "/products": "Product Management",
+    "/product-sales": "Product Sales",
     "/prices": "Price Management",
     "/daily-cash-report": "Daily Reports",
     "/order-management": "Order Management",
@@ -205,6 +206,16 @@ const Sidebar = () => {
           >
             <Package size={19} />
             <span>Product Management</span>
+          </NavLink>
+
+          <NavLink
+            to="/product-sales"
+            className={({ isActive }) =>
+              `dashboard-nav-item ${isActive ? "active" : ""}`
+            }
+          >
+            <Package size={19} />
+            <span>Product Sales</span>
           </NavLink>
 
 

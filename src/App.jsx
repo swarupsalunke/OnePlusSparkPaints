@@ -47,6 +47,7 @@ import SocialMediaActivities from "./pages/superadmin/SocialMediaActivities";
 import HelpSupport from "./pages/superadmin/HelpSupport";
 import SupplierVendorManagement from "./pages/superadmin/SupplierVendorManagement";
 import InternalCommunication from "./pages/superadmin/InternalCommunication";
+import ProductSales from "./pages/superadmin/ProductSales";
 
 // painter
 import PainterDashboard from "./pages/painter/PainterDashboard";
@@ -233,6 +234,7 @@ const App = () => {
         <Route path="/help-support" element={<DashboardLayout><HelpSupport /></DashboardLayout>} />
         <Route path="/supplier-vendor-management" element={<DashboardLayout><SupplierVendorManagement /></DashboardLayout>} />
         <Route path="/internal-communication" element={<DashboardLayout><InternalCommunication /></DashboardLayout>}/>
+        <Route path="/product-sales" element={<DashboardLayout><ProductSales /></DashboardLayout>} />
 
         {/* painter */}
 
