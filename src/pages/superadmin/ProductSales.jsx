@@ -54,11 +54,27 @@ const ProductSales = () => {
         try {
             const fileText = await file.text();
 
-            // Remove invalid XML character references
-            const cleanedXML = fileText.replace(
-                /&#(?:0*[0-8]|0*1[1-2]|0*1[4-9]|0*2[0-9]|0*3[01]);/gi,
-                ""
-            );
+            // Clean invalid XML character references and control characters
+            const cleanedXML = fileText
+                .replace(
+                    /&#(?:x([0-9a-f]+)|([0-9]+));/gi,
+                    (match, hex, decimal) => {
+                        const code = hex
+                            ? parseInt(hex, 16)
+                            : parseInt(decimal, 10);
+
+                        const valid =
+                            code === 9 ||
+                            code === 10 ||
+                            code === 13 ||
+                            (code >= 32 && code <= 0xD7FF) ||
+                            (code >= 0xE000 && code <= 0xFFFD) ||
+                            (code >= 0x10000 && code <= 0x10FFFF);
+
+                        return valid ? match : "";
+                    }
+                )
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
 
             const parser = new DOMParser();
 
@@ -143,7 +159,7 @@ const ProductSales = () => {
                 <div className="product-sales-import-header">
                     <div>
                         <h3>Product Sales</h3>
-                        <p>Fetch sales voucher data from Tally JSON file</p>
+                        <p>Fetch sales voucher data from Tally JSON/XML file</p>
                     </div>
 
                     <label className="product-sales-upload-btn">
