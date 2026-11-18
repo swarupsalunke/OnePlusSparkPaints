@@ -14,6 +14,35 @@ const ProductSales = () => {
     const [productSalesXMLFile, setProductSalesXMLFile] = useState("");
     const [productSalesXMLError, setProductSalesXMLError] = useState("");
 
+    // FETCH PRODUCT SALES FROM BACKEND
+    const [loadingSales, setLoadingSales] = useState(false);
+    const [apiSalesData, setApiSalesData] = useState([]);
+
+    const fetchProductSales = async () => {
+        try {
+            setLoadingSales(true);
+
+            const response = await fetch(
+                "http://localhost:5000/api/product-sales"
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error("Unable to fetch product sales");
+            }
+
+            setApiSalesData(result.data || []);
+
+            console.log("Product Sales API Data:", result.data);
+        } catch (error) {
+            console.error("Product Sales API Error:", error);
+            alert(error.message || "Unable to connect to backend");
+        } finally {
+            setLoadingSales(false);
+        }
+    };
+
     const handleProductSalesJSON = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -159,31 +188,17 @@ const ProductSales = () => {
                 <div className="product-sales-import-header">
                     <div>
                         <h3>Product Sales</h3>
-                        <p>Fetch sales voucher data from Tally JSON/XML file</p>
+                        <p>Fetch sales voucher data directly from Tally</p>
                     </div>
 
-                    <label className="product-sales-upload-btn">
-                        <Upload size={17} />
-                        Select JSON File
-                        <input
-                            type="file"
-                            accept=".json,application/json"
-                            onChange={handleProductSalesJSON}
-                            hidden
-                        />
-                    </label>
-
-                    <label className="product-sales-upload-btn product-sales-xml-btn">
-                        <Upload size={17} />
-                        Select XML File
-
-                        <input
-                            type="file"
-                            accept=".xml,application/xml,text/xml"
-                            onChange={handleProductSalesXML}
-                            hidden
-                        />
-                    </label>
+                    <button
+                        type="button"
+                        className="product-sales-upload-btn"
+                        onClick={fetchProductSales}
+                        disabled={loadingSales}
+                    >
+                        {loadingSales ? "Fetching..." : "Fetch Sales Data"}
+                    </button>
                 </div>
 
                 {productSalesFile && (
