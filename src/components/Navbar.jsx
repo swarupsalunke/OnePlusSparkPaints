@@ -41,9 +41,9 @@ const [selectedDate, setSelectedDate] = useState("");
       <div className="navbar-right">
 
         {/* Add */}
-        <button className="navbar-icon-btn add-btn">
+        {/* <button className="navbar-icon-btn add-btn">
           <Plus size={20} />
-        </button>
+        </button> */}
 
         
 
