@@ -1,6 +1,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
 import {
   Send,
   Paperclip,
@@ -12,12 +13,14 @@ import {
   X,
   Download,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
 
 import "../../css/dealer/internalCommunication.css";
 
 const CHAT_API_URL =
   "https://oneplussparkpaintsserver.onrender.com/api/internal-communication";
+const SOCKET_URL = CHAT_API_URL.replace("/api/internal-communication", "");
 
 const DealerInternalCommunication = () => {
   const token = localStorage.getItem("token");
@@ -79,7 +82,32 @@ const DealerInternalCommunication = () => {
         authConfig
       );
 
-      setMessages(response.data.messages || []);
+      const messageList = response.data.messages || [];
+      setMessages(messageList);
+
+      for (const msg of messageList) {
+        const senderId =
+          typeof msg.sender === "object" ? msg.sender?._id : msg.sender;
+        const alreadyRead = (msg.readBy || []).some((reader) => {
+          const readerId =
+            typeof reader === "object"
+              ? reader?.user?._id || reader?.user || reader?._id
+              : reader;
+          return String(readerId) === String(currentUser._id || currentUser.id);
+        });
+
+        if (
+          String(senderId) !== String(currentUser._id || currentUser.id) &&
+          !alreadyRead
+        ) {
+          await axios.patch(
+            `${CHAT_API_URL}/messages/${msg._id}/read`,
+            {},
+            authConfig
+          ).catch(() => {});
+        }
+      }
+      await fetchConversations();
     } catch (err) {
       console.error("Dealer messages error:", err);
       setMessages([]);
@@ -90,6 +118,59 @@ const DealerInternalCommunication = () => {
     fetchContacts();
     fetchConversations();
   }, [fetchContacts, fetchConversations]);
+
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("new_message_notification", (payload) => {
+      fetchConversations();
+      if (Notification.permission === "granted" && document.hidden) {
+        new Notification(payload.senderName || "New message", {
+          body: payload.text || "You received a new message",
+        });
+      }
+    });
+
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachments: [] }
+            : item
+        )
+      );
+    });
+
+    return () => socket.disconnect();
+  }, [fetchConversations, token]);
+
+  useEffect(() => {
+    if (!selectedConversation?._id) return;
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+    socket.emit("join_conversation", selectedConversation._id, () => {});
+    socket.on("new_message", () => fetchMessages(selectedConversation._id));
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachments: [] }
+            : item
+        )
+      );
+    });
+    return () => socket.disconnect();
+  }, [selectedConversation, fetchMessages, token]);
 
   useEffect(() => {
     if (selectedConversation?._id) {
@@ -124,7 +205,7 @@ const DealerInternalCommunication = () => {
       const response = await axios.post(
         `${CHAT_API_URL}/direct`,
         {
-          participantId: contact._id,
+          targetUserId: contact._id,
         },
         authConfig
       );
@@ -241,6 +322,28 @@ const DealerInternalCommunication = () => {
       senderId === currentUser._id ||
       senderId === currentUser.id
     );
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId || !window.confirm("Delete this message?")) return;
+    try {
+      await axios.delete(
+        `${CHAT_API_URL}/messages/${messageId}`,
+        authConfig
+      );
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachments: [] }
+            : item
+        )
+      );
+      await fetchConversations();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to delete message."
+      );
+    }
   };
 
   return (
@@ -362,9 +465,13 @@ const DealerInternalCommunication = () => {
                       }`}
                     >
                       <div className="dealer-chat-message-content">
-                        {msg.message && <p>{msg.message}</p>}
+                        {msg.isDeleted ? (
+                          <p className="dealer-chat-deleted">This message was deleted</p>
+                        ) : msg.message ? (
+                          <p>{msg.message}</p>
+                        ) : null}
 
-                        {msg.attachments?.map((attachment, index) => {
+                        {!msg.isDeleted && msg.attachments?.map((attachment, index) => {
                           const isImage =
                             attachment.mimeType?.startsWith("image/");
 
@@ -405,6 +512,17 @@ const DealerInternalCommunication = () => {
                         <span className="dealer-chat-message-time">
                           {formatTime(msg.createdAt)}
                         </span>
+                        {own && !msg.isDeleted && (
+                          <button
+                            type="button"
+                            className="dealer-chat-delete-btn"
+                            title="Delete message"
+                            aria-label="Delete message"
+                            onClick={() => handleDeleteMessage(msg._id)}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

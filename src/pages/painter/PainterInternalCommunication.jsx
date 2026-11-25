@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
 import {
   Search,
   Plus,
@@ -11,12 +12,14 @@ import {
   FileText,
   Image as ImageIcon,
   X,
+  Trash2,
 } from "lucide-react";
 
 import "../../css/painter/internalCommunication.css";
 
 const CHAT_API_URL =
   "https://oneplussparkpaintsserver.onrender.com/api/internal-communication";
+const SOCKET_URL = CHAT_API_URL.replace("/api/internal-communication", "");
 
 const getAuthConfig = () => ({
   headers: {
@@ -170,7 +173,12 @@ const PainterInternalCommunication = () => {
       for (const item of data) {
         const senderId = getUserId(item.sender);
         const alreadyRead = (item.readBy || []).some(
-          (reader) => getUserId(reader) === String(currentUserId)
+          (reader) =>
+            getUserId(
+              typeof reader === "object"
+                ? reader.user
+                : reader
+            ) === String(currentUserId)
         );
 
         if (senderId !== String(currentUserId) && !alreadyRead) {
@@ -199,6 +207,62 @@ const PainterInternalCommunication = () => {
     fetchContacts();
     fetchConversations();
   }, []);
+
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    const socket = io(SOCKET_URL, {
+      auth: { token: localStorage.getItem("token") },
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("new_message_notification", (payload) => {
+      fetchConversations();
+      if (
+        Notification.permission === "granted" &&
+        document.hidden
+      ) {
+        new Notification(payload.senderName || "New message", {
+          body: payload.text || "You received a new message",
+        });
+      }
+    });
+
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachment: null }
+            : item
+        )
+      );
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConversation?._id) return;
+    const socket = io(SOCKET_URL, {
+      auth: { token: localStorage.getItem("token") },
+      transports: ["websocket", "polling"],
+    });
+    socket.emit("join_conversation", selectedConversation._id, () => {});
+    socket.on("new_message", () => fetchMessages(selectedConversation._id));
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachment: null }
+            : item
+        )
+      );
+    });
+    return () => socket.disconnect();
+  }, [selectedConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -311,6 +375,28 @@ const PainterInternalCommunication = () => {
       );
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId || !window.confirm("Delete this message?")) return;
+    try {
+      await axios.delete(
+        `${CHAT_API_URL}/messages/${messageId}`,
+        getAuthConfig()
+      );
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachment: null }
+            : item
+        )
+      );
+      await fetchConversations();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to delete message."
+      );
     }
   };
 
@@ -530,9 +616,13 @@ const PainterInternalCommunication = () => {
                           {item.senderName}
                         </span>
 
-                        {item.message && <p>{item.message}</p>}
+                        {item.isDeleted ? (
+                          <p className="painter-chat-deleted">This message was deleted</p>
+                        ) : item.message ? (
+                          <p>{item.message}</p>
+                        ) : null}
 
-                        {item.attachment && (
+                        {!item.isDeleted && item.attachment && (
                           <a
                             className="painter-chat-attachment"
                             href={
@@ -560,6 +650,17 @@ const PainterInternalCommunication = () => {
                         <span className="painter-chat-message-time">
                           {item.time}
                         </span>
+                        {item.outgoing && !item.isDeleted && (
+                          <button
+                            type="button"
+                            className="painter-chat-delete-btn"
+                            title="Delete message"
+                            aria-label="Delete message"
+                            onClick={() => handleDeleteMessage(item._id)}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))

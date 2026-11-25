@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
 import { API_BASE_URL } from "../../config/api";
 import {
   Search,
@@ -16,12 +17,14 @@ import {
   FileText,
   AlertCircle,
   CheckCheck,
+  Trash2,
 } from "lucide-react";
 
 import "../../css/superadmin/internalCommunication.css";
 
 const CHAT_API_URL =
   "https://oneplussparkpaintsserver.onrender.com/api/internal-communication";
+const SOCKET_URL = CHAT_API_URL.replace("/api/internal-communication", "");
 
 const getToken = () => localStorage.getItem("token");
 
@@ -112,6 +115,7 @@ const InternalCommunication = () => {
   const [error, setError] = useState("");
 
   const messagesEndRef = useRef(null);
+  const selectedConversationRef = useRef(null);
 
   // Fetch conversations
   const fetchConversations = async () => {
@@ -141,7 +145,7 @@ const InternalCommunication = () => {
           time: formatTime(
             conversation.updatedAt || conversation.createdAt
           ),
-          unread: 0,
+          unread: conversation.unreadCount || 0,
           online: false,
         })
       );
@@ -217,7 +221,9 @@ const InternalCommunication = () => {
           String(senderId) !== String(currentUserId) &&
           !(item.readBy || []).some((reader) => {
             const readerId =
-              typeof reader === "object" ? reader?._id : reader;
+              typeof reader === "object"
+                ? reader?.user?._id || reader?.user || reader?._id
+                : reader;
 
             return String(readerId) === String(currentUserId);
           })
@@ -250,6 +256,80 @@ const InternalCommunication = () => {
   useEffect(() => {
     fetchConversations();
   }, []);
+
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const socket = io(SOCKET_URL, {
+      auth: { token: getToken() },
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("new_message_notification", (payload) => {
+      fetchConversations();
+
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted" &&
+        document.hidden
+      ) {
+        new Notification(payload.senderName || "New message", {
+          body: payload.text || "You received a new message",
+        });
+      }
+    });
+
+    socket.on("new_message", (savedMessage) => {
+      const conversationId =
+        typeof savedMessage.conversation === "object"
+          ? savedMessage.conversation?._id
+          : savedMessage.conversation;
+
+      if (
+        conversationId &&
+        String(conversationId) ===
+          String(selectedConversationRef.current?._id)
+      ) {
+        fetchMessages(conversationId);
+      }
+      fetchConversations();
+    });
+
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachment: null }
+            : item
+        )
+      );
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConversation?._id) return;
+    selectedConversationRef.current = selectedConversation;
+
+    const socket = io(SOCKET_URL, {
+      auth: { token: getToken() },
+      transports: ["websocket", "polling"],
+    });
+
+    socket.emit(
+      "join_conversation",
+      selectedConversation._id,
+      () => {}
+    );
+
+    return () => socket.disconnect();
+  }, [selectedConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -377,6 +457,33 @@ const InternalCommunication = () => {
     }
 
     event.target.value = "";
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId) return;
+
+    const confirmed = window.confirm("Delete this message?");
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(
+        `${CHAT_API_URL}/messages/${messageId}`,
+        getAuthConfig()
+      );
+      setMessages((previous) =>
+        previous.map((item) =>
+          item._id === messageId
+            ? { ...item, isDeleted: true, message: "", attachment: null }
+            : item
+        )
+      );
+      await fetchConversations();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        "Unable to delete message."
+      );
+    }
   };
 
   // Load active user accounts for the New Chat flow.
@@ -778,6 +885,10 @@ const InternalCommunication = () => {
                         )}
 
                         <div className="ic-message-bubble">
+                          {item.isDeleted ? (
+                            <p className="ic-message-deleted">This message was deleted</p>
+                          ) : (
+                            <>
                           {item.priority &&
                             item.priority !== "NORMAL" && (
                               <div
@@ -801,12 +912,26 @@ const InternalCommunication = () => {
                               <span>{item.attachment.name}</span>
                             </a>
                           )}
+                            </>
+                          )}
 
                           <div className="ic-message-meta">
                             <span>{item.time}</span>
 
                             {item.outgoing && (
                               <CheckCheck size={15} />
+                            )}
+
+                            {item.outgoing && !item.isDeleted && (
+                            <button
+                              type="button"
+                              className="ic-delete-message-btn"
+                              title="Delete message"
+                              aria-label="Delete message"
+                              onClick={() => handleDeleteMessage(item._id)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
                             )}
                           </div>
                         </div>

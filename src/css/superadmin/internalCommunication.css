@@ -464,6 +464,30 @@
   overflow-wrap: anywhere;
 }
 
+.ic-message-bubble > .ic-message-deleted {
+  color: #98a2b3;
+  font-style: italic;
+}
+
+.ic-delete-message-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #98a2b3;
+  cursor: pointer;
+}
+
+.ic-delete-message-btn:hover {
+  background: #ffe4d2;
+  color: #c45a18;
+}
+
 /* Message Priority */
 
 .ic-message-priority {
