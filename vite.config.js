@@ -11,6 +11,7 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: [
         'oneplusspark.ico',
+        'favicon-32.png',
         'icon-192.png',
         'icon-512.png',
         'icon-maskable-512.png',
@@ -30,6 +31,12 @@ export default defineConfig({
         orientation: 'portrait-primary',
         categories: ['business', 'productivity'],
         icons: [
+          {
+            src: '/favicon-32.png',
+            sizes: '32x32',
+            type: 'image/png',
+            purpose: 'any',
+          },
           {
             src: '/icon-192.png',
             sizes: '192x192',
