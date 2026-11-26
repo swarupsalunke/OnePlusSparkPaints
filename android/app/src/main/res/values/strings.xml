@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OnePlusSpark Paints</string>
+    <string name="title_activity_main">OnePlusSpark Paints</string>
+    <string name="package_name">com.oneplusspark.paint</string>
+    <string name="custom_url_scheme">com.oneplusspark.paint</string>
+</resources>
